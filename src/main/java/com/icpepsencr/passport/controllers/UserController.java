@@ -16,11 +16,40 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    /* ================= REGISTRATION ================= */
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public ResponseEntity<User> registerUser(@RequestBody User user) {
+        if (userService.getByUsername(user.getUsername()).isPresent()) {
+            return ResponseEntity.status(409).build();
+        }
         return ResponseEntity.ok(userService.createUser(user));
     }
 
+    /* ================= LOGIN ================= */
+    @PostMapping("/login")
+    public ResponseEntity<User> login(@RequestBody LoginRequest request) {
+        return userService.login(request.getUsername(), request.getPassword())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(401).build());
+    }
+
+    /* ================= CHANGE PASSWORD ================= */
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(
+            @RequestParam String username,
+            @RequestParam String oldPassword,
+            @RequestParam String newPassword) {
+
+        try {
+            return userService.changePassword(username, oldPassword, newPassword)
+                    .map(user -> ResponseEntity.ok("Password changed successfully."))
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(400).body(ex.getMessage());
+        }
+    }
+
+    /* ================= CRUD ================= */
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable Long id) {
         return userService.getById(id)
@@ -33,10 +62,12 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
+    /* ================= EDIT USER INFO ================= */
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
-        user.setId(id);
-        return ResponseEntity.ok(userService.updateUser(user));
+    public ResponseEntity<User> editUser(@PathVariable Long id, @RequestBody User user) {
+        return userService.editUser(id, user)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
@@ -44,12 +75,4 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
-
-    @PostMapping("/login")
-    public ResponseEntity<User> login(@RequestBody LoginRequest request) {
-        return userService.login(request.getUsername(), request.getPassword())
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(401).build());
-    }
-
 }

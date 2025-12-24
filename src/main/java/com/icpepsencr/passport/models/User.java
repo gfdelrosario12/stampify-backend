@@ -1,6 +1,8 @@
 package com.icpepsencr.passport.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -12,95 +14,71 @@ public abstract class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="first_name", nullable = false)
+    /* ================= BASIC INFO ================= */
+    @Column(name = "first_name", nullable = false)
     private String firstName;
 
-    @Column(name="last_name", nullable = false)
+    @Column(name = "last_name", nullable = false)
     private String lastName;
 
     @Column(nullable = false, unique = true)
-    private String username;
+    private String username; // email
 
-    @Column(name="password_hash", nullable = false)
+    /* ================= SECURITY ================= */
+    @JsonIgnore
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Column(name = "password_changed_at")
     private LocalDateTime passwordChangedAt;
 
-    @Column(nullable = false)
+    @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    /* ================= AUDIT ================= */
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public Long getId() {
-        return id;
+    /* ================= JPA LIFECYCLE ================= */
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = this.createdAt;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 
-    public String getFirstName() {
-        return firstName;
-    }
+    /* ================= GETTERS & SETTERS ================= */
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
 
-    public String getLastName() {
-        return lastName;
-    }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
+    public String getUsername() { return username; }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
+    public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+        this.passwordChangedAt = LocalDateTime.now();
     }
 
-    public LocalDateTime getPasswordChangedAt() {
-        return passwordChangedAt;
-    }
+    public LocalDateTime getPasswordChangedAt() { return passwordChangedAt; }
+    public void setPasswordChangedAt(LocalDateTime passwordChangedAt) { this.passwordChangedAt = passwordChangedAt; }
 
-    public void setPasswordChangedAt(LocalDateTime passwordChangedAt) {
-        this.passwordChangedAt = passwordChangedAt;
-    }
+    public Boolean getActive() { return isActive; }
+    public void setActive(Boolean active) { isActive = active; }
 
-    public Boolean getActive() {
-        return isActive;
-    }
-
-    public void setActive(Boolean active) {
-        isActive = active;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
