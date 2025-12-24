@@ -7,8 +7,17 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public interface AuditLogService {
-    AuditLog createAuditLog(AuditLog log);
-    Optional<AuditLog> getById(Long id);
-    List<AuditLog> getAll();
+public class AuditLogService {
+
+    public AuditLog createAuditLog(AuditLog log) {
+        return null;
+    }
+
+    public Optional<AuditLog> getById(Long id) {
+        return Optional.empty();
+    }
+
+    public List<AuditLog> getAll() {
+        return List.of();
+    }
 }

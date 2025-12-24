@@ -1,5 +1,6 @@
 package com.icpepsencr.passport.controllers;
 
+import com.icpepsencr.passport.dto.LoginRequest;
 import com.icpepsencr.passport.models.User;
 import com.icpepsencr.passport.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,4 +44,12 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<User> login(@RequestBody LoginRequest request) {
+        return userService.login(request.getUsername(), request.getPassword())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(401).build());
+    }
+
 }

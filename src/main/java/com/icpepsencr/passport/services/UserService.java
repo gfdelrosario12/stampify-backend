@@ -7,11 +7,32 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public interface UserService {
-    User createUser(User user);
-    Optional<User> getById(Long id);
-    Optional<User> getByUsername(String username);
-    List<User> getAllUsers();
-    User updateUser(User user);
-    void deleteUser(Long id);
+public class UserService {
+
+    public User createUser(User user) {
+        return null;
+    }
+
+    public Optional<User> getById(Long id) {
+        return Optional.empty();
+    }
+
+    public Optional<User> getByUsername(String username) {
+        return Optional.empty();
+    }
+
+    public List<User> getAllUsers() {
+        return List.of();
+    }
+
+    public User updateUser(User user) {
+        return null;
+    }
+
+    public void deleteUser(Long id) {
+    }
+
+    public Optional<User> login(String username, String rawPassword) {
+        return Optional.empty();
+    }
 }

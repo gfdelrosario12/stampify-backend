@@ -7,10 +7,24 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public interface PassportService {
-    Passport createPassport(Passport passport);
-    Optional<Passport> getById(Long id);
-    List<Passport> getByMemberId(Long memberId);
-    Passport updatePassport(Passport passport);
-    void deletePassport(Long id);
+public class PassportService {
+
+    public Passport createPassport(Passport passport) {
+        return null;
+    }
+
+    public Optional<Passport> getById(Long id) {
+        return Optional.empty();
+    }
+
+    public List<Passport> getByMemberId(Long memberId) {
+        return List.of();
+    }
+
+    public Passport updatePassport(Passport passport) {
+        return null;
+    }
+
+    public void deletePassport(Long id) {
+    }
 }

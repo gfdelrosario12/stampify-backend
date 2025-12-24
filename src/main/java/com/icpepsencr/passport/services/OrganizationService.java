@@ -7,10 +7,24 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public interface OrganizationService {
-    Organization createOrganization(Organization org);
-    Optional<Organization> getById(Long id);
-    List<Organization> getAll();
-    Organization updateOrganization(Organization org);
-    void deleteOrganization(Long id);
+public class OrganizationService {
+
+    public Organization createOrganization(Organization org) {
+        return null;
+    }
+
+    public Optional<Organization> getById(Long id) {
+        return Optional.empty();
+    }
+
+    public List<Organization> getAll() {
+        return List.of();
+    }
+
+    public Organization updateOrganization(Organization org) {
+        return null;
+    }
+
+    public void deleteOrganization(Long id) {
+    }
 }

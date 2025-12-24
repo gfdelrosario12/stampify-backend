@@ -4,6 +4,9 @@ import com.icpepsencr.passport.models.AuditPasswordChange;
 import org.springframework.stereotype.Service;
 
 @Service
-public interface AuditPasswordChangeService {
-    AuditPasswordChange create(AuditPasswordChange change);
+public class AuditPasswordChangeService {
+
+    public AuditPasswordChange create(AuditPasswordChange change) {
+        return null;
+    }
 }

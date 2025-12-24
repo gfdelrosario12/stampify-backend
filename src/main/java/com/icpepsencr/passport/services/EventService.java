@@ -7,10 +7,24 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public interface EventService {
-    Event createEvent(Event event);
-    Optional<Event> getById(Long id);
-    List<Event> getByOrganization(Long orgId);
-    Event updateEvent(Event event);
-    void deleteEvent(Long id);
+public class EventService {
+
+    public Event createEvent(Event event) {
+        return null;
+    }
+
+    public Optional<Event> getById(Long id) {
+        return Optional.empty();
+    }
+
+    public List<Event> getByOrganization(Long orgId) {
+        return List.of();
+    }
+
+    public Event updateEvent(Event event) {
+        return null;
+    }
+
+    public void deleteEvent(Long id) {
+    }
 }
