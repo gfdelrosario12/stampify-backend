@@ -9,10 +9,6 @@ import java.util.Optional;
 @Service
 public class MemberService {
 
-    public Member createMember(Member member) {
-        return null;
-    }
-
     public Optional<Member> getById(Long id) {
         return Optional.empty();
     }
@@ -23,10 +19,6 @@ public class MemberService {
 
     public Optional<Member> getByOrgAndMembershipNumber(Long orgId, String membershipNumber) {
         return Optional.empty();
-    }
-
-    public Member updateMember(Member member) {
-        return null;
     }
 
     public void deleteMember(Long id) {

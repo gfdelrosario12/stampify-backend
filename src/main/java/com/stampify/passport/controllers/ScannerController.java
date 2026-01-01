@@ -15,11 +15,6 @@ public class ScannerController {
     @Autowired
     private ScannerService scannerService;
 
-    @PostMapping
-    public ResponseEntity<Scanner> createScanner(@RequestBody Scanner scanner) {
-        return ResponseEntity.ok(scannerService.createScanner(scanner));
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<Scanner> getScanner(@PathVariable Long id) {
         return scannerService.getById(id)
@@ -30,12 +25,6 @@ public class ScannerController {
     @GetMapping("/organization/{orgId}")
     public ResponseEntity<List<Scanner>> getScannersByOrganization(@PathVariable Long orgId) {
         return ResponseEntity.ok(scannerService.getByOrganization(orgId));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Scanner> updateScanner(@PathVariable Long id, @RequestBody Scanner scanner) {
-        scanner.setId(id);
-        return ResponseEntity.ok(scannerService.updateScanner(scanner));
     }
 
     @DeleteMapping("/{id}")

@@ -15,11 +15,6 @@ public class AdminController {
     @Autowired
     private AdminService adminService;
 
-    @PostMapping
-    public ResponseEntity<Admin> createAdmin(@RequestBody Admin admin) {
-        return ResponseEntity.ok(adminService.createAdmin(admin));
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<Admin> getAdmin(@PathVariable Long id) {
         return adminService.getById(id)
@@ -30,12 +25,6 @@ public class AdminController {
     @GetMapping("/organization/{orgId}")
     public ResponseEntity<List<Admin>> getAdminsByOrganization(@PathVariable Long orgId) {
         return ResponseEntity.ok(adminService.getByOrganization(orgId));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Admin> updateAdmin(@PathVariable Long id, @RequestBody Admin admin) {
-        admin.setId(id);
-        return ResponseEntity.ok(adminService.updateAdmin(admin));
     }
 
     @DeleteMapping("/{id}")
