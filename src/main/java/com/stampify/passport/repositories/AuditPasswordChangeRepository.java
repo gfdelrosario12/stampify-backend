@@ -1,8 +1,10 @@
 package com.stampify.passport.repositories;
+
+import com.stampify.passport.models.AuditPasswordChange;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import java.util.Optional;
-import java.util.List;
 
 @Repository
-public interface AuditPasswordChangeRepository extends JpaRepository<AuditPasswordChangeRepository, Long> { }
+public interface AuditPasswordChangeRepository
+        extends JpaRepository<AuditPasswordChange, Long> {
+}
