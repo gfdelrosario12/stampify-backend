@@ -5,4 +5,4 @@ import java.util.Optional;
 import java.util.List;
 
 @Repository
-public interface AuditPasswordChangeRepository extends JpaRepository<AuditPasswordChange, Long> { }
+public interface AuditPasswordChangeRepository extends JpaRepository<AuditPasswordChangeRepository, Long> { }

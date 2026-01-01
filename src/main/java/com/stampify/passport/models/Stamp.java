@@ -27,10 +27,10 @@ public class Stamp {
     private String scanMethod;
     private String scanStatus;
 
-    @Column(precision = 10, scale = 7)
+    @Column
     private Double latitude;
 
-    @Column(precision = 10, scale = 7)
+    @Column
     private Double longitude;
 
     private LocalDateTime createdAt;
