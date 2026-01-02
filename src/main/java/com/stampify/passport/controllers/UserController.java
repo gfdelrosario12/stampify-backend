@@ -1,6 +1,7 @@
 package com.stampify.passport.controllers;
 
 import com.stampify.passport.dto.LoginRequest;
+import com.stampify.passport.dto.RegisterUserRequest;
 import com.stampify.passport.models.User;
 import com.stampify.passport.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,11 +18,8 @@ public class UserController {
 
     /* ================= REGISTRATION ================= */
     @PostMapping
-    public ResponseEntity<User> registerUser(@RequestBody User user) {
-        if (userService.getByEmail(user.getEmail()).isPresent()) {
-            return ResponseEntity.status(409).build();
-        }
-        return ResponseEntity.ok(userService.createUser(user));
+    public ResponseEntity<User> registerUser(@RequestBody RegisterUserRequest request) {
+        return ResponseEntity.ok(userService.createUser(request));
     }
 
     /* ================= LOGIN ================= */
