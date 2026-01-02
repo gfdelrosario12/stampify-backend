@@ -1,4 +1,4 @@
-package com.stampify.passport.dto;
+package com.stampify.passport.enums;
 
 public enum UserRole {
     ADMIN,
