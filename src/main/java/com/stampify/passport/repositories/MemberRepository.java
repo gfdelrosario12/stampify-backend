@@ -8,5 +8,4 @@ import java.util.List;
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findByOrganizationId(Long orgId);
-    Optional<Member> findByOrganizationIdAndMembershipNumber(Long orgId, String membershipNumber);
 }

@@ -5,17 +5,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "members", uniqueConstraints = @UniqueConstraint(columnNames = {"organization_id", "membership_number"}))
+@Table(name = "members")
 public class Member extends User {
 
     @ManyToOne
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
-
-    @Column(name = "membership_number", nullable = false)
-    private String membershipNumber;
-
-    private String membershipStatus;
     private LocalDateTime joinedAt;
     private LocalDateTime leftAt;
     private LocalDateTime createdAt;
@@ -29,22 +24,6 @@ public class Member extends User {
 
     public void setOrganization(Organization organization) {
         this.organization = organization;
-    }
-
-    public String getMembershipNumber() {
-        return membershipNumber;
-    }
-
-    public void setMembershipNumber(String membershipNumber) {
-        this.membershipNumber = membershipNumber;
-    }
-
-    public String getMembershipStatus() {
-        return membershipStatus;
-    }
-
-    public void setMembershipStatus(String membershipStatus) {
-        this.membershipStatus = membershipStatus;
     }
 
     public LocalDateTime getJoinedAt() {

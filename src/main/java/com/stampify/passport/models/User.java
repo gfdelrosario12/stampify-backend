@@ -41,6 +41,9 @@ public abstract class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "account_status")
+    private LocalDateTime accountStatus;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -84,4 +87,16 @@ public abstract class User {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getAccountStatus() {
+        return accountStatus;
+    }
+
+    public void setAccountStatus(LocalDateTime accountStatus) {
+        this.accountStatus = accountStatus;
+    }
 }

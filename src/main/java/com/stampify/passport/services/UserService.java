@@ -51,7 +51,6 @@ public class UserService {
             case "MEMBER" -> {
                 Member member = new Member();
                 mapCommonFields(member, req);
-                member.setMembershipNumber(req.getMembershipNumber());
                 member.setOrganization(
                         organizationRepository.findById(req.getOrganizationId())
                                 .orElseThrow(() -> new IllegalArgumentException("Invalid organization"))
