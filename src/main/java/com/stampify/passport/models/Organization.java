@@ -15,9 +15,6 @@ public class Organization {
     @Column(nullable = false)
     private String name;
 
-    @Column(name = "organization_code", nullable = false, unique = true)
-    private String organizationCode;
-
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -47,14 +44,6 @@ public class Organization {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getOrganizationCode() {
-        return organizationCode;
-    }
-
-    public void setOrganizationCode(String organizationCode) {
-        this.organizationCode = organizationCode;
     }
 
     public LocalDateTime getCreatedAt() {

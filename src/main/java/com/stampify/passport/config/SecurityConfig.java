@@ -24,13 +24,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/users/login").permitAll()
                         .requestMatchers("/api/users").permitAll()
-                        .requestMatchers("/api/users/**").permitAll() // <-- allow PUT/DELETE/GET/POST for all users endpoints
-                        .requestMatchers("/api/schools").permitAll()
-                        .requestMatchers("/api/events/**").permitAll()
-                        .requestMatchers("/api/reports/**").permitAll()
-                        .requestMatchers("/api/stamps/**").permitAll()
-                        .requestMatchers("/api/schools/**").permitAll()
-                        .requestMatchers("/api/passports/**").permitAll()
+                        .requestMatchers("/api/users/**").permitAll()
+                        .requestMatchers("/api/organizations/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
