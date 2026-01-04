@@ -3,18 +3,22 @@ package com.stampify.passport.services;
 import com.stampify.passport.dto.RegisterUserRequest;
 import com.stampify.passport.models.*;
 import com.stampify.passport.repositories.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 @Service
+@Transactional
 public class UserService {
 
     @Autowired private UserRepository userRepository;
@@ -22,12 +26,13 @@ public class UserService {
     @Autowired private MemberRepository memberRepository;
     @Autowired private ScannerRepository scannerRepository;
     @Autowired private OrganizationRepository organizationRepository;
+    @Autowired private PassportRepository passportRepository;
 
     @Autowired private Argon2PasswordEncoder passwordEncoder;
     @Autowired private OtpService otpService;
 
     /* ======================================================
-       CREATE USER (SINGLE ENDPOINT – ROLE AWARE)
+       CREATE USER (ROLE AWARE)
        ====================================================== */
 
     public User createUser(RegisterUserRequest req) {
@@ -41,32 +46,36 @@ public class UserService {
             case "ADMIN" -> {
                 Admin admin = new Admin();
                 mapCommonFields(admin, req);
-                admin.setOrganization(
-                        organizationRepository.findById(req.getOrganizationId())
-                                .orElseThrow(() -> new IllegalArgumentException("Invalid organization"))
-                );
+                admin.setOrganization(getOrganization(req.getOrganizationId()));
                 yield adminRepository.save(admin);
             }
 
             case "MEMBER" -> {
                 Member member = new Member();
                 mapCommonFields(member, req);
-                member.setOrganization(
-                        organizationRepository.findById(req.getOrganizationId())
-                                .orElseThrow(() -> new IllegalArgumentException("Invalid organization"))
-                );
+                member.setOrganization(getOrganization(req.getOrganizationId()));
                 member.setJoinedAt(LocalDateTime.now());
-                yield memberRepository.save(member);
+                member.setCreatedAt(LocalDateTime.now());
+
+                Member savedMember = memberRepository.save(member);
+
+                Passport passport = new Passport();
+                passport.setMember(savedMember);
+                passport.setIssuedAt(LocalDateTime.now());
+                passport.setExpiresAt(LocalDateTime.now().plusYears(1));
+                passport.setPassportStatus("ACTIVE");
+                passport.setCreatedAt(LocalDateTime.now());
+
+                passportRepository.save(passport);
+
+                yield savedMember;
             }
 
             case "SCANNER" -> {
                 Scanner scanner = new Scanner();
                 mapCommonFields(scanner, req);
                 scanner.setDeviceIdentifier(req.getDeviceIdentifier());
-                scanner.setOrganization(
-                        organizationRepository.findById(req.getOrganizationId())
-                                .orElseThrow(() -> new IllegalArgumentException("Invalid organization"))
-                );
+                scanner.setOrganization(getOrganization(req.getOrganizationId()));
                 scanner.setRegisteredAt(LocalDateTime.now());
                 yield scannerRepository.save(scanner);
             }
@@ -78,13 +87,19 @@ public class UserService {
     /* ======================================================
        COMMON FIELD MAPPER
        ====================================================== */
+
     private void mapCommonFields(User user, RegisterUserRequest req) {
         user.setFirstName(req.getFirstName());
         user.setLastName(req.getLastName());
-        user.setEmail(req.getEmail());
+        user.setEmail(req.getEmail().toLowerCase().trim());
         user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
         user.setActive(true);
         user.setUpdatedAt(LocalDateTime.now());
+    }
+
+    private Organization getOrganization(Long orgId) {
+        return organizationRepository.findById(orgId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid organization"));
     }
 
     /* ======================================================
@@ -128,11 +143,15 @@ public class UserService {
     }
 
     /* ======================================================
-       DELETE
+       DELETE (CASCADE SAFE)
        ====================================================== */
 
     public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Passport deletion is AUTOMATIC via cascade + orphanRemoval
+        userRepository.delete(user);
     }
 
     /* ======================================================
@@ -190,7 +209,7 @@ public class UserService {
             throw new IllegalArgumentException("Invalid OTP");
         }
 
-        return userRepository.findByEmail(email.toLowerCase())
+        return userRepository.findByEmail(email.toLowerCase().trim())
                 .map(user -> {
                     user.setPasswordHash(passwordEncoder.encode(newPassword));
                     user.setUpdatedAt(LocalDateTime.now());
@@ -207,9 +226,9 @@ public class UserService {
             throw new IllegalArgumentException("Email already in use");
         }
 
-        return userRepository.findByEmail(oldEmail)
+        return userRepository.findByEmail(oldEmail.toLowerCase().trim())
                 .map(user -> {
-                    user.setEmail(newEmail.toLowerCase());
+                    user.setEmail(newEmail.toLowerCase().trim());
                     user.setUpdatedAt(LocalDateTime.now());
                     return userRepository.save(user);
                 });
