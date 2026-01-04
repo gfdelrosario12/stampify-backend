@@ -7,6 +7,11 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(
+        name = "role",
+        discriminatorType = DiscriminatorType.STRING,
+        length = 20
+)
 public abstract class User {
 
     @Id

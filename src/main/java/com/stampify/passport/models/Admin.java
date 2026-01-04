@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "admins")
+@DiscriminatorValue("ADMIN")
 public class Admin extends User {
 
     @ManyToOne

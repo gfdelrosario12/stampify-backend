@@ -24,14 +24,7 @@ public class Stamp {
     private Scanner scanner;
 
     private LocalDateTime stampedAt;
-    private String scanMethod;
     private String scanStatus;
-
-    @Column
-    private Double latitude;
-
-    @Column
-    private Double longitude;
 
     private LocalDateTime createdAt;
 
@@ -75,36 +68,12 @@ public class Stamp {
         this.stampedAt = stampedAt;
     }
 
-    public String getScanMethod() {
-        return scanMethod;
-    }
-
-    public void setScanMethod(String scanMethod) {
-        this.scanMethod = scanMethod;
-    }
-
     public String getScanStatus() {
         return scanStatus;
     }
 
     public void setScanStatus(String scanStatus) {
         this.scanStatus = scanStatus;
-    }
-
-    public Double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
-
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
     }
 
     public LocalDateTime getCreatedAt() {

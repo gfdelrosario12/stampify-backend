@@ -15,11 +15,6 @@ public class PassportController {
     @Autowired
     private PassportService passportService;
 
-    @PostMapping
-    public ResponseEntity<Passport> createPassport(@RequestBody Passport passport) {
-        return ResponseEntity.ok(passportService.createPassport(passport));
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<Passport> getPassport(@PathVariable Long id) {
         return passportService.getById(id)

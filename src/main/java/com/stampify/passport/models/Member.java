@@ -6,6 +6,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "members")
+@DiscriminatorValue("MEMBER")
 public class Member extends User {
 
     @ManyToOne
