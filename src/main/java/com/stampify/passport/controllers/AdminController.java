@@ -1,9 +1,9 @@
 package com.stampify.passport.controllers;
 
+import com.stampify.passport.dto.AdminDTO;
+import com.stampify.passport.mappers.UserMapper;
 import com.stampify.passport.models.Admin;
-import com.stampify.passport.services.AdminService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import com.stampify.passport.repositories.AdminRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,24 +12,26 @@ import java.util.List;
 @RequestMapping("/api/admins")
 public class AdminController {
 
-    @Autowired
-    private AdminService adminService;
+    private final AdminRepository adminRepository;
 
+    public AdminController(AdminRepository adminRepository) {
+        this.adminRepository = adminRepository;
+    }
+
+    /* ================= GET ALL ADMINS ================= */
+    @GetMapping
+    public List<AdminDTO> getAllAdmins() {
+        return adminRepository.findAll()
+                .stream()
+                .map(UserMapper::toAdminDTO)
+                .toList();
+    }
+
+    /* ================= GET ADMIN BY ID ================= */
     @GetMapping("/{id}")
-    public ResponseEntity<Admin> getAdmin(@PathVariable Long id) {
-        return adminService.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/organization/{orgId}")
-    public ResponseEntity<List<Admin>> getAdminsByOrganization(@PathVariable Long orgId) {
-        return ResponseEntity.ok(adminService.getByOrganization(orgId));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAdmin(@PathVariable Long id) {
-        adminService.deleteAdmin(id);
-        return ResponseEntity.noContent().build();
+    public AdminDTO getAdminById(@PathVariable Long id) {
+        Admin admin = adminRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Admin not found"));
+        return UserMapper.toAdminDTO(admin);
     }
 }

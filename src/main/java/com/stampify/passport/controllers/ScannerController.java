@@ -1,9 +1,9 @@
 package com.stampify.passport.controllers;
 
+import com.stampify.passport.dto.ScannerDTO;
+import com.stampify.passport.mappers.UserMapper;
 import com.stampify.passport.models.Scanner;
-import com.stampify.passport.services.ScannerService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import com.stampify.passport.repositories.ScannerRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,24 +12,26 @@ import java.util.List;
 @RequestMapping("/api/scanners")
 public class ScannerController {
 
-    @Autowired
-    private ScannerService scannerService;
+    private final ScannerRepository scannerRepository;
 
+    public ScannerController(ScannerRepository scannerRepository) {
+        this.scannerRepository = scannerRepository;
+    }
+
+    /* ================= GET ALL SCANNERS ================= */
+    @GetMapping
+    public List<ScannerDTO> getAllScanners() {
+        return scannerRepository.findAll()
+                .stream()
+                .map(UserMapper::toScannerDTO)
+                .toList();
+    }
+
+    /* ================= GET SCANNER BY ID ================= */
     @GetMapping("/{id}")
-    public ResponseEntity<Scanner> getScanner(@PathVariable Long id) {
-        return scannerService.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/organization/{orgId}")
-    public ResponseEntity<List<Scanner>> getScannersByOrganization(@PathVariable Long orgId) {
-        return ResponseEntity.ok(scannerService.getByOrganization(orgId));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteScanner(@PathVariable Long id) {
-        scannerService.deleteScanner(id);
-        return ResponseEntity.noContent().build();
+    public ScannerDTO getScannerById(@PathVariable Long id) {
+        Scanner scanner = scannerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Scanner not found"));
+        return UserMapper.toScannerDTO(scanner);
     }
 }

@@ -1,9 +1,9 @@
 package com.stampify.passport.controllers;
 
+import com.stampify.passport.dto.MemberDTO;
+import com.stampify.passport.mappers.UserMapper;
 import com.stampify.passport.models.Member;
-import com.stampify.passport.services.MemberService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import com.stampify.passport.repositories.MemberRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,24 +12,26 @@ import java.util.List;
 @RequestMapping("/api/members")
 public class MemberController {
 
-    @Autowired
-    private MemberService memberService;
+    private final MemberRepository memberRepository;
 
+    public MemberController(MemberRepository memberRepository) {
+        this.memberRepository = memberRepository;
+    }
+
+    /* ================= GET ALL MEMBERS ================= */
+    @GetMapping
+    public List<MemberDTO> getAllMembers() {
+        return memberRepository.findAll()
+                .stream()
+                .map(UserMapper::toMemberDTO)
+                .toList();
+    }
+
+    /* ================= GET MEMBER BY ID ================= */
     @GetMapping("/{id}")
-    public ResponseEntity<Member> getMember(@PathVariable Long id) {
-        return memberService.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/organization/{orgId}")
-    public ResponseEntity<List<Member>> getMembersByOrganization(@PathVariable Long orgId) {
-        return ResponseEntity.ok(memberService.getByOrganization(orgId));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMember(@PathVariable Long id) {
-        memberService.deleteMember(id);
-        return ResponseEntity.noContent().build();
+    public MemberDTO getMemberById(@PathVariable Long id) {
+        Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+        return UserMapper.toMemberDTO(member);
     }
 }

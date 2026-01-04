@@ -26,16 +26,4 @@ public class PassportController {
     public ResponseEntity<List<Passport>> getPassportsByMember(@PathVariable Long memberId) {
         return ResponseEntity.ok(passportService.getByMemberId(memberId));
     }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Passport> updatePassport(@PathVariable Long id, @RequestBody Passport passport) {
-        passport.setId(id);
-        return ResponseEntity.ok(passportService.updatePassport(passport));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePassport(@PathVariable Long id) {
-        passportService.deletePassport(id);
-        return ResponseEntity.noContent().build();
-    }
 }
