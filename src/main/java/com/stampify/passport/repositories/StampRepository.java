@@ -7,6 +7,7 @@ import java.util.List;
 
 @Repository
 public interface StampRepository extends JpaRepository<Stamp, Long> {
-    Optional<Stamp> findByPassportIdAndEventId(Long passportId, Long eventId);
-    List<Stamp> findByScannerId(Long scannerId);
+    Optional<Stamp> findByPassport_IdAndEvent_Id(Long passportId, Long eventId);
+
+    List<Stamp> findByScanner_Id(Long scannerId);
 }
