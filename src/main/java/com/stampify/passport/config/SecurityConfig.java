@@ -22,8 +22,6 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/login").permitAll()
-                        .requestMatchers("/api/users").permitAll()
                         .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/api/events/**").permitAll()
                         .requestMatchers("/api/organizations/**").permitAll()
@@ -31,6 +29,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admins/**").permitAll()
                         .requestMatchers("/api/members/**").permitAll()
                         .requestMatchers("/api/scanners/**").permitAll()
+                        .requestMatchers("/api/passports/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->

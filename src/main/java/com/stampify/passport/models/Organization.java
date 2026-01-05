@@ -2,6 +2,7 @@ package com.stampify.passport.models;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -12,30 +13,61 @@ public class Organization {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "organization")
-    private List<Admin> admins;
+    /* ================= ADMINS ================= */
+    @OneToMany(
+            mappedBy = "organization",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<Admin> admins = new ArrayList<>();
 
-    @OneToMany(mappedBy = "organization")
-    private List<Member> members;
+    /* ================= MEMBERS ================= */
+    @OneToMany(
+            mappedBy = "organization",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<Member> members = new ArrayList<>();
 
-    @OneToMany(mappedBy = "organization")
-    private List<Scanner> scanners;
+    /* ================= SCANNERS ================= */
+    @OneToMany(
+            mappedBy = "organization",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<Scanner> scanners = new ArrayList<>();
 
-    @OneToMany(mappedBy = "organization")
-    private List<Event> events;
+    /* ================= EVENTS ================= */
+    @OneToMany(
+            mappedBy = "organization",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<Event> events = new ArrayList<>();
+
+    /* ================= LIFECYCLE ================= */
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = this.createdAt;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /* ================= GETTERS & SETTERS ================= */
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -50,16 +82,8 @@ public class Organization {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 
     public List<Admin> getAdmins() {

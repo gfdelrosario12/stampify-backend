@@ -32,7 +32,7 @@ public class UserService {
     @Autowired private OtpService otpService;
 
     /* ======================================================
-       CREATE USER (ROLE AWARE)
+       CREATE USER (ROLE AWARE, CLEAN)
        ====================================================== */
 
     public User createUser(RegisterUserRequest req) {
@@ -41,24 +41,23 @@ public class UserService {
             throw new IllegalArgumentException("Email already exists.");
         }
 
+        Organization organization = getOrganization(req.getOrganizationId());
+
         return switch (req.getRole().toUpperCase()) {
 
             case "ADMIN" -> {
                 Admin admin = new Admin();
-                mapCommonFields(admin, req);
-                admin.setOrganization(getOrganization(req.getOrganizationId()));
+                mapCommonFields(admin, req, organization);
                 yield adminRepository.save(admin);
             }
 
             case "MEMBER" -> {
                 Member member = new Member();
-                mapCommonFields(member, req);
-                member.setOrganization(getOrganization(req.getOrganizationId()));
-                member.setJoinedAt(LocalDateTime.now());
-                member.setCreatedAt(LocalDateTime.now());
+                mapCommonFields(member, req, organization);
 
                 Member savedMember = memberRepository.save(member);
 
+                /* Auto-create initial passport */
                 Passport passport = new Passport();
                 passport.setMember(savedMember);
                 passport.setIssuedAt(LocalDateTime.now());
@@ -73,10 +72,7 @@ public class UserService {
 
             case "SCANNER" -> {
                 Scanner scanner = new Scanner();
-                mapCommonFields(scanner, req);
-                scanner.setDeviceIdentifier(req.getDeviceIdentifier());
-                scanner.setOrganization(getOrganization(req.getOrganizationId()));
-                scanner.setRegisteredAt(LocalDateTime.now());
+                mapCommonFields(scanner, req, organization);
                 yield scannerRepository.save(scanner);
             }
 
@@ -85,14 +81,15 @@ public class UserService {
     }
 
     /* ======================================================
-       COMMON FIELD MAPPER
+       COMMON FIELD MAPPER (USER LEVEL)
        ====================================================== */
 
-    private void mapCommonFields(User user, RegisterUserRequest req) {
+    private void mapCommonFields(User user, RegisterUserRequest req, Organization organization) {
         user.setFirstName(req.getFirstName());
         user.setLastName(req.getLastName());
         user.setEmail(req.getEmail().toLowerCase().trim());
         user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
+        user.setOrganization(organization);
         user.setActive(true);
         user.setUpdatedAt(LocalDateTime.now());
     }
@@ -129,16 +126,29 @@ public class UserService {
     }
 
     /* ======================================================
-       UPDATE
+       UPDATE (ROLE SAFE, SIMPLE)
        ====================================================== */
 
-    public Optional<User> editUser(Long id, User updated) {
-        return userRepository.findById(id).map(user -> {
-            user.setFirstName(updated.getFirstName());
-            user.setLastName(updated.getLastName());
-            user.setActive(updated.getActive());
-            user.setUpdatedAt(LocalDateTime.now());
-            return userRepository.save(user);
+    public Optional<User> editUser(Long id, User incoming) {
+
+        return userRepository.findById(id).map(existing -> {
+
+            /* ===== USER FIELDS ===== */
+            existing.setFirstName(incoming.getFirstName());
+            existing.setLastName(incoming.getLastName());
+            existing.setEmail(incoming.getEmail());
+            existing.setActive(incoming.getActive());
+            existing.setOrganization(
+                    getOrganization(incoming.getOrganization().getId())
+            );
+            existing.setUpdatedAt(LocalDateTime.now());
+
+            /* ===== ROLE CHECK (NO MUTATION) ===== */
+            if (!existing.getClass().equals(incoming.getClass())) {
+                throw new IllegalStateException("Role change is not allowed");
+            }
+
+            return userRepository.save(existing);
         });
     }
 
@@ -147,10 +157,16 @@ public class UserService {
        ====================================================== */
 
     public void deleteUser(Long id) {
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Passport deletion is AUTOMATIC via cascade + orphanRemoval
+        /*
+         * ENTITY CASCADES:
+         * - MEMBER  → passports deleted automatically
+         * - SCANNER → stamps deleted automatically
+         * - ADMIN   → no dependents
+         */
         userRepository.delete(user);
     }
 

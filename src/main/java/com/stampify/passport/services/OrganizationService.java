@@ -4,12 +4,14 @@ import com.stampify.passport.models.Organization;
 import com.stampify.passport.repositories.OrganizationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class OrganizationService {
 
     private final OrganizationRepository organizationRepository;
@@ -19,49 +21,57 @@ public class OrganizationService {
         this.organizationRepository = organizationRepository;
     }
 
-    // ============================
-    // CREATE ORGANIZATION
-    // ============================
+    /* ============================
+       CREATE
+       ============================ */
     public Organization createOrganization(Organization org) {
-        org.setCreatedAt(LocalDateTime.now());
-        org.setUpdatedAt(LocalDateTime.now());
         return organizationRepository.save(org);
     }
 
-    // ============================
-    // GET BY ID
-    // ============================
+    /* ============================
+       READ
+       ============================ */
     public Optional<Organization> getById(Long id) {
         return organizationRepository.findById(id);
     }
 
-    // ============================
-    // GET ALL
-    // ============================
     public List<Organization> getAll() {
         return organizationRepository.findAll();
     }
 
-    // ============================
-    // UPDATE
-    // ============================
+    /* ============================
+       UPDATE
+       ============================ */
     public Organization updateOrganization(Organization org) {
         Organization existing = organizationRepository.findById(org.getId())
-                .orElseThrow(() -> new RuntimeException("Organization not found with ID: " + org.getId()));
+                .orElseThrow(() ->
+                        new RuntimeException("Organization not found with ID: " + org.getId())
+                );
 
         existing.setName(org.getName());
-        existing.setUpdatedAt(LocalDateTime.now());
+        // updatedAt handled by @PreUpdate
 
         return organizationRepository.save(existing);
     }
 
-    // ============================
-    // DELETE
-    // ============================
+    /* ============================
+       DELETE (ORPHAN SAFE)
+       ============================ */
     public void deleteOrganization(Long id) {
-        if (!organizationRepository.existsById(id)) {
-            throw new RuntimeException("Organization not found with ID: " + id);
-        }
-        organizationRepository.deleteById(id);
+
+        Organization organization = organizationRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Organization not found with ID: " + id)
+                );
+
+        /*
+         * CASCADE + ORPHAN REMOVAL WILL:
+         * - delete admins
+         * - delete members -> passports
+         * - delete scanners -> stamps
+         * - delete events
+         * - delete joined users table rows
+         */
+        organizationRepository.delete(organization);
     }
 }
