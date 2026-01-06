@@ -1,6 +1,7 @@
 package com.stampify.passport.services;
 
 import com.stampify.passport.models.Passport;
+import com.stampify.passport.repositories.PassportRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,22 +10,17 @@ import java.util.Optional;
 @Service
 public class PassportService {
 
-    public Passport createPassport(Passport passport) {
-        return null;
+    private final PassportRepository passportRepository;
+
+    public PassportService(PassportRepository passportRepository) {
+        this.passportRepository = passportRepository;
     }
 
     public Optional<Passport> getById(Long id) {
-        return Optional.empty();
+        return passportRepository.findById(id);
     }
 
     public List<Passport> getByMemberId(Long memberId) {
-        return List.of();
-    }
-
-    public Passport updatePassport(Passport passport) {
-        return null;
-    }
-
-    public void deletePassport(Long id) {
+        return passportRepository.findByMemberId(memberId);
     }
 }
