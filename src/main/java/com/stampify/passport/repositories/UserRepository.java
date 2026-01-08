@@ -12,9 +12,6 @@ import java.util.List;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
-    // Add this method to fetch all users of a specific organization
-    List<User> findByOrganization(Organization organization);
-
     // Or, if you prefer using organization id directly
     List<User> findByOrganizationId(Long organizationId);
 }
