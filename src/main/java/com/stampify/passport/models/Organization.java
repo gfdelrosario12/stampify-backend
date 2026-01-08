@@ -9,49 +9,48 @@ import java.util.List;
 @Table(name = "organizations")
 public class Organization {
 
+    /* ================= PRIMARY KEY ================= */
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /* ================= BASIC INFO ================= */
+
     @Column(nullable = false, unique = true)
     private String name;
 
+    /* ================= AUDIT FIELDS ================= */
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    /* ================= ADMINS ================= */
-    @OneToMany(
-            mappedBy = "organization",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    /* ================= RELATIONSHIPS ================= */
+
+    /**
+     * IMPORTANT:
+     * - No cascade
+     * - No orphanRemoval
+     * - Organization MUST be creatable without users
+     * - Soft delete propagation handled in service layer
+     */
+
+    @OneToMany(mappedBy = "organization")
     private List<Admin> admins = new ArrayList<>();
 
-    /* ================= MEMBERS ================= */
-    @OneToMany(
-            mappedBy = "organization",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "organization")
     private List<Member> members = new ArrayList<>();
 
-    /* ================= SCANNERS ================= */
-    @OneToMany(
-            mappedBy = "organization",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    private List<Scanner> scanners = new ArrayList<>();
+    @OneToMany(mappedBy = "organization")
+    private List<OrgScanner> scanners = new ArrayList<>();
 
-    /* ================= EVENTS ================= */
-    @OneToMany(
-            mappedBy = "organization",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "organization")
     private List<Event> events = new ArrayList<>();
 
     /* ================= LIFECYCLE ================= */
@@ -65,6 +64,16 @@ public class Organization {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    /* ================= SOFT DELETE ================= */
+
+    public boolean isDeleted() {
+        return this.deletedAt != null;
+    }
+
+    public void markDeleted(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 
     /* ================= GETTERS & SETTERS ================= */
@@ -89,55 +98,46 @@ public class Organization {
         return updatedAt;
     }
 
-    public List<Admin> getAdmins() {
-        return admins;
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
     }
 
-    public void setAdmins(List<Admin> admins) {
-        this.admins = admins;
+    public List<Admin> getAdmins() {
+        return admins;
     }
 
     public List<Member> getMembers() {
         return members;
     }
 
-    public void setMembers(List<Member> members) {
-        this.members = members;
-    }
-
-    public List<Scanner> getScanners() {
+    public List<OrgScanner> getScanners() {
         return scanners;
-    }
-
-    public void setScanners(List<Scanner> scanners) {
-        this.scanners = scanners;
     }
 
     public List<Event> getEvents() {
         return events;
     }
 
-    public void setEvents(List<Event> events) {
-        this.events = events;
-    }
+    /* ================= RESTRICTED SETTERS ================= */
+
+    /**
+     * Intentionally limited setters to prevent
+     * accidental state corruption.
+     */
 
     public void setId(Long id) {
         this.id = id;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    protected void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    protected void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
-
-    public void setDeletedAt(LocalDateTime deletedAt) {
+    protected void setDeletedAt(LocalDateTime deletedAt) {
         this.deletedAt = deletedAt;
     }
 }

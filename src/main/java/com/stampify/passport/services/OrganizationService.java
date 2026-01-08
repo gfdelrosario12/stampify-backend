@@ -1,6 +1,5 @@
 package com.stampify.passport.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stampify.passport.models.*;
 import com.stampify.passport.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,19 +21,19 @@ public class OrganizationService {
     private final ScannerRepository scannerRepository;
     private final PassportRepository passportRepository;
     private final StampRepository stampRepository;
-    private final AuditLogRepository auditLogRepository;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final OrganizationAuditLogRepository orgAuditLogRepository;
 
     @Autowired
-    public OrganizationService(OrganizationRepository organizationRepository,
-                               UserRepository userRepository,
-                               MemberRepository memberRepository,
-                               AdminRepository adminRepository,
-                               ScannerRepository scannerRepository,
-                               PassportRepository passportRepository,
-                               StampRepository stampRepository,
-                               AuditLogRepository auditLogRepository) {
+    public OrganizationService(
+            OrganizationRepository organizationRepository,
+            UserRepository userRepository,
+            MemberRepository memberRepository,
+            AdminRepository adminRepository,
+            ScannerRepository scannerRepository,
+            PassportRepository passportRepository,
+            StampRepository stampRepository,
+            OrganizationAuditLogRepository orgAuditLogRepository) {
+
         this.organizationRepository = organizationRepository;
         this.userRepository = userRepository;
         this.memberRepository = memberRepository;
@@ -42,16 +41,15 @@ public class OrganizationService {
         this.scannerRepository = scannerRepository;
         this.passportRepository = passportRepository;
         this.stampRepository = stampRepository;
-        this.auditLogRepository = auditLogRepository;
+        this.orgAuditLogRepository = orgAuditLogRepository;
     }
 
     /* ============================
        CREATE
        ============================ */
-    public Organization createOrganization(Organization org, User actorUser) throws Exception {
-        org.setCreatedAt(LocalDateTime.now());
+    public Organization createOrganization(Organization org, SuperAdmin actorUser) {
         Organization saved = organizationRepository.save(org);
-        logAudit(actorUser, "ORGANIZATION", "CREATE", saved, null, saved);
+        logAudit(actorUser, "ORGANIZATION", "CREATE", saved);
         return saved;
     }
 
@@ -69,100 +67,72 @@ public class OrganizationService {
     /* ============================
        UPDATE
        ============================ */
-    public Organization updateOrganization(Organization org, User actorUser) throws Exception {
+    public Organization updateOrganization(Organization org, SuperAdmin actorUser) {
         Organization existing = organizationRepository.findById(org.getId())
                 .orElseThrow(() -> new RuntimeException("Organization not found with ID: " + org.getId()));
 
-        String previousData = serialize(existing);
-
         existing.setName(org.getName());
-        existing.setUpdatedAt(LocalDateTime.now());
 
         Organization saved = organizationRepository.save(existing);
-        logAudit(actorUser, "ORGANIZATION", "UPDATE", saved, previousData, saved);
+        logAudit(actorUser, "ORGANIZATION", "UPDATE", saved);
         return saved;
     }
 
     /* ============================
-       DELETE (SAFE / SOFT)
+       DELETE (SOFT)
        ============================ */
-    public void deleteOrganization(Long id, User actorUser) throws Exception {
-        Organization org = organizationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Organization not found with ID: " + id));
+    public void deleteOrganization(Long id, SuperAdmin actorUser) {
 
-        String previousData = serialize(org);
+        Organization org = organizationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Organization not found"));
+
         LocalDateTime now = LocalDateTime.now();
 
-        // Soft delete all users under this organization
         List<User> users = userRepository.findByOrganizationId(id);
+
         for (User user : users) {
-            user.setActive(false);
-            user.setUpdatedAt(now);
+
+            user.softDelete(actorUser.getEmail());
 
             if (user instanceof Member member) {
-                // Soft delete member passports
                 List<Passport> passports = passportRepository.findByMemberAndDeletedAtIsNull(member);
                 for (Passport passport : passports) {
                     passport.setPassportStatus("REVOKED");
                     passport.setDeletedAt(now);
 
-                    // Soft delete stamps
                     List<Stamp> stamps = stampRepository.findByPassportAndDeletedAtIsNull(passport);
                     for (Stamp stamp : stamps) {
-                        stamp.setScanStatus("REVOKED");
-                        stamp.setStampedAt(now);
-                        stampRepository.save(stamp);
-                    }
-
-                    passportRepository.save(passport);
-                }
-            }
-
-            if (user instanceof Scanner scanner) {
-                // Soft delete stamps scanned by this scanner
-                if (scanner.getStamps() != null) {
-                    for (Stamp stamp : scanner.getStamps()) {
-                        stamp.setScanStatus("REVOKED");
-                        stamp.setStampedAt(now);
-                        stampRepository.save(stamp);
+                        stamp.setValid(false);
+                        stamp.setDeletedAt(now);
                     }
                 }
             }
 
-            userRepository.save(user);
+            if (user instanceof OrgScanner scanner) {
+                List<Stamp> stamps = stampRepository.findByScannerAndDeletedAtIsNull(scanner);
+                for (Stamp stamp : stamps) {
+                    stamp.setValid(false);
+                    stamp.setDeletedAt(now);
+                }
+            }
         }
 
-        // Soft delete organization
-        org.setDeletedAt(now);
-        organizationRepository.save(org);
-
-        logAudit(actorUser, "ORGANIZATION", "DELETE", org, previousData, null);
+        org.markDeleted(now);
+        logAudit(actorUser, "ORGANIZATION", "DELETE", org);
     }
 
     /* ============================
        HELPER METHODS
        ============================ */
-    private void logAudit(User actorUser, String entityName, String actionName,
-                          Object entity, String previousData, Object newData) throws Exception {
-
-        AuditLog auditLog = new AuditLog();
-        auditLog.setActorUser(actorUser);
-        auditLog.setActionCategory(entityName);
+    private void logAudit(SuperAdmin actorUser, String actionCategory, String actionName, Organization entity) {
+        OrganizationAuditLog auditLog = new OrganizationAuditLog();
+        auditLog.setActorSuperAdminId(actorUser.getId());
+        auditLog.setActionCategory(actionCategory);
         auditLog.setActionName(actionName);
-        if (entity instanceof Organization o) auditLog.setEntityId(o.getId());
-        auditLog.setEntityName(entityName);
-        auditLog.setPreviousData(previousData);
-        auditLog.setNewData(newData != null ? serialize(newData) : null);
+        auditLog.setEntityName("Organization");
+        auditLog.setEntityId(entity.getId());
         auditLog.setOccurredAt(LocalDateTime.now());
 
-        auditLogRepository.save(auditLog);
-    }
-
-    private String serialize(Object obj) {
-        try {
-            return objectMapper.writeValueAsString(obj);
-        } catch (Exception e) {
-            return "{}";
-        }
+        orgAuditLogRepository.save(auditLog);
     }
 }

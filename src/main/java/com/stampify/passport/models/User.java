@@ -3,6 +3,9 @@ package com.stampify.passport.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.Where;
 
 @Entity
@@ -48,7 +51,7 @@ public abstract class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 

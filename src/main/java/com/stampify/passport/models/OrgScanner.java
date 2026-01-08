@@ -6,7 +6,7 @@ import java.util.List;
 @Entity
 @Table(name = "scanners")
 @DiscriminatorValue("SCANNER")
-public class Scanner extends User {
+public class OrgScanner extends User {
 
     @OneToMany(
             mappedBy = "scanner",

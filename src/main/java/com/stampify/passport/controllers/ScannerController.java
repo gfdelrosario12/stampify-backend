@@ -2,7 +2,7 @@ package com.stampify.passport.controllers;
 
 import com.stampify.passport.dto.ScannerDTO;
 import com.stampify.passport.mappers.UserMapper;
-import com.stampify.passport.models.Scanner;
+import com.stampify.passport.models.OrgScanner;
 import com.stampify.passport.repositories.ScannerRepository;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,7 +30,7 @@ public class ScannerController {
     /* ================= GET SCANNER BY ID ================= */
     @GetMapping("/{id}")
     public ScannerDTO getScannerById(@PathVariable Long id) {
-        Scanner scanner = scannerRepository.findById(id)
+        OrgScanner scanner = scannerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Scanner not found"));
         return UserMapper.toScannerDTO(scanner);
     }

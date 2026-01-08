@@ -1,9 +1,9 @@
 package com.stampify.passport.controllers;
 
-import com.stampify.passport.models.Admin;
 import com.stampify.passport.models.Organization;
+import com.stampify.passport.models.SuperAdmin;
+import com.stampify.passport.repositories.SuperAdminRepository;
 import com.stampify.passport.services.OrganizationService;
-import com.stampify.passport.repositories.AdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,19 +15,25 @@ import java.util.List;
 public class OrganizationController {
 
     private final OrganizationService organizationService;
-    private final AdminRepository adminRepository;
+    private final SuperAdminRepository superAdminRepository;
 
     @Autowired
     public OrganizationController(OrganizationService organizationService,
-                                  AdminRepository adminRepository) {
+                                  SuperAdminRepository superAdminRepository) {
         this.organizationService = organizationService;
-        this.adminRepository = adminRepository;
+        this.superAdminRepository = superAdminRepository;
     }
 
     /* ===== CREATE ===== */
     @PostMapping
-    public ResponseEntity<Organization> createOrganization(@RequestBody Organization org) throws Exception {
-        Admin actorUser = getCurrentAdmin();
+    public ResponseEntity<Organization> createOrganization(@RequestBody OrganizationRequest request) throws Exception {
+        // Fetch SuperAdmin only for audit
+        SuperAdmin actorUser = superAdminRepository.findById(request.getSuperAdminId())
+                .orElseThrow(() -> new RuntimeException("Super admin not found with ID: " + request.getSuperAdminId()));
+
+        Organization org = new Organization();
+        org.setName(request.getName());
+
         Organization created = organizationService.createOrganization(org, actorUser);
         return ResponseEntity.ok(created);
     }
@@ -47,28 +53,45 @@ public class OrganizationController {
 
     /* ===== UPDATE ===== */
     @PutMapping("/{id}")
-    public ResponseEntity<Organization> updateOrganization(@PathVariable Long id,
-                                                           @RequestBody Organization org) throws Exception {
-        Admin actorUser = getCurrentAdmin();
+    public ResponseEntity<Organization> updateOrganization(
+            @PathVariable Long id,
+            @RequestBody OrganizationRequest request) throws Exception {
+
+        // Fetch SuperAdmin only for audit
+        SuperAdmin actorUser = superAdminRepository.findById(request.getSuperAdminId())
+                .orElseThrow(() -> new RuntimeException("Super admin not found with ID: " + request.getSuperAdminId()));
+
+        Organization org = new Organization();
         org.setId(id);
+        org.setName(request.getName());
+
         Organization updated = organizationService.updateOrganization(org, actorUser);
         return ResponseEntity.ok(updated);
     }
 
-    /* ===== DELETE (SAFE / SOFT) ===== */
+    /* ===== DELETE ===== */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOrganization(@PathVariable Long id) throws Exception {
-        Admin actorUser = getCurrentAdmin();
+    public ResponseEntity<Void> deleteOrganization(
+            @RequestParam Long superAdminId,
+            @PathVariable Long id) throws Exception {
+
+        // Fetch SuperAdmin only for audit
+        SuperAdmin actorUser = superAdminRepository.findById(superAdminId)
+                .orElseThrow(() -> new RuntimeException("Super admin not found with ID: " + superAdminId));
+
         organizationService.deleteOrganization(id, actorUser);
         return ResponseEntity.noContent().build();
     }
 
-    /* ===== HELPER ===== */
-    private Admin getCurrentAdmin() {
-        // TODO: Replace this with actual JWT / SecurityContext authentication
-        // For now, just fetching the first admin as placeholder
-        Long adminId = 1L; // Replace with ID from JWT or frontend
-        return adminRepository.findById(adminId)
-                .orElseThrow(() -> new RuntimeException("Admin not found with ID: " + adminId));
+    /* ===== REQUEST DTO ===== */
+    public static class OrganizationRequest {
+        private String name;
+        private Long superAdminId;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+
+        public Long getSuperAdminId() { return superAdminId; }
+        public void setSuperAdminId(Long superAdminId) { this.superAdminId = superAdminId; }
     }
 }

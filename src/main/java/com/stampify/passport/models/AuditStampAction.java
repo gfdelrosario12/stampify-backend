@@ -23,7 +23,7 @@ public class AuditStampAction {
 
     @ManyToOne
     @JoinColumn(name = "performed_by_scanner_id")
-    private Scanner performedByScanner;
+    private OrgScanner performedByScanner;
 
     @Column(nullable = false)
     private LocalDateTime performedAt;
@@ -60,11 +60,11 @@ public class AuditStampAction {
         this.action = action;
     }
 
-    public Scanner getPerformedByScanner() {
+    public OrgScanner getPerformedByScanner() {
         return performedByScanner;
     }
 
-    public void setPerformedByScanner(Scanner performedByScanner) {
+    public void setPerformedByScanner(OrgScanner performedByScanner) {
         this.performedByScanner = performedByScanner;
     }
 

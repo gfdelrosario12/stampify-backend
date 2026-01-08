@@ -31,7 +31,7 @@ public class UserMapper {
     private static String resolveRole(User user) {
         if (user instanceof Admin) return "ADMIN";
         if (user instanceof Member) return "MEMBER";
-        if (user instanceof Scanner) return "SCANNER";
+        if (user instanceof OrgScanner) return "SCANNER";
         return "UNKNOWN";
     }
 
@@ -54,7 +54,7 @@ public class UserMapper {
     }
 
     /* ================= SCANNER ================= */
-    public static ScannerDTO toScannerDTO(Scanner scanner) {
+    public static ScannerDTO toScannerDTO(OrgScanner scanner) {
         ScannerDTO dto = new ScannerDTO();
         mapBase(scanner, dto);
 
@@ -68,7 +68,7 @@ public class UserMapper {
     public static UserDTO toDTO(User user) {
         if (user instanceof Admin admin) return toAdminDTO(admin);
         if (user instanceof Member member) return toMemberDTO(member);
-        if (user instanceof Scanner scanner) return toScannerDTO(scanner);
+        if (user instanceof OrgScanner scanner) return toScannerDTO(scanner);
         throw new IllegalArgumentException("Unknown user type");
     }
 }

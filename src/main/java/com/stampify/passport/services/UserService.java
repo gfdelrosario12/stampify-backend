@@ -62,7 +62,7 @@ public class UserService {
             }
 
             case "SCANNER" -> {
-                Scanner scanner = new Scanner();
+                OrgScanner scanner = new OrgScanner();
                 mapCommonFields(scanner, req, organization);
                 yield scannerRepository.save(scanner);
             }

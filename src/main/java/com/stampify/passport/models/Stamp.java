@@ -21,7 +21,7 @@ public class Stamp {
 
     @ManyToOne
     @JoinColumn(name = "scanner_id", nullable = false)
-    private Scanner scanner;
+    private OrgScanner scanner;
 
     private LocalDateTime stampedAt;
     private String scanStatus;
@@ -43,8 +43,8 @@ public class Stamp {
     public Event getEvent() { return event; }
     public void setEvent(Event event) { this.event = event; }
 
-    public Scanner getScanner() { return scanner; }
-    public void setScanner(Scanner scanner) { this.scanner = scanner; }
+    public OrgScanner getScanner() { return scanner; }
+    public void setScanner(OrgScanner scanner) { this.scanner = scanner; }
 
     public LocalDateTime getStampedAt() { return stampedAt; }
     public void setStampedAt(LocalDateTime stampedAt) { this.stampedAt = stampedAt; }

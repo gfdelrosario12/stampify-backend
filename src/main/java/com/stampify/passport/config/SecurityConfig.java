@@ -30,6 +30,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/members/**").permitAll()
                         .requestMatchers("/api/scanners/**").permitAll()
                         .requestMatchers("/api/passports/**").permitAll()
+                        .requestMatchers("/api/super-admins/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->

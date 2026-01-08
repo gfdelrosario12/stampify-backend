@@ -12,4 +12,6 @@ public interface PassportRepository extends JpaRepository<Passport, Long> {
     List<Passport> findByMemberId(Long memberId);
     // Only fetch non-deleted passports for a member
     List<Passport> findByMemberAndDeletedAtIsNull(Member member);
+
+    List<Passport> findByIdAndDeletedAtIsNull(Long id);
 }

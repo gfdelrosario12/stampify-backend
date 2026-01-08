@@ -1,5 +1,6 @@
 package com.stampify.passport.repositories;
 
+import com.stampify.passport.models.OrgScanner;
 import com.stampify.passport.models.Passport;
 import com.stampify.passport.models.Stamp;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,4 +23,7 @@ public interface StampRepository extends JpaRepository<Stamp, Long> {
 
     // Fetch all stamps for a passport that are NOT soft-deleted
     List<Stamp> findByPassportAndDeletedAtIsNull(Passport passport);
+
+    // Fetch non-deleted stamps scanned by a scanner
+    List<Stamp> findByScannerAndDeletedAtIsNull(OrgScanner scanner);
 }
