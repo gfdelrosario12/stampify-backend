@@ -19,88 +19,41 @@ public abstract class UserDTO {
     /* ================= AUDIT ================= */
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private LocalDateTime accountStatus;
 
     /* ================= ROLE ================= */
     private String role;
 
-    public Long getId() {
-        return id;
-    }
+    /* ================= ORGANIZATION ================= */
+    private Long organizationId;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    /* ================= GETTERS & SETTERS ================= */
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public String getFirstName() {
-        return firstName;
-    }
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
 
-    public String getLastName() {
-        return lastName;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
+    public LocalDateTime getPasswordChangedAt() { return passwordChangedAt; }
+    public void setPasswordChangedAt(LocalDateTime passwordChangedAt) { this.passwordChangedAt = passwordChangedAt; }
 
-    public String getEmail() {
-        return email;
-    }
+    public Boolean getActive() { return isActive; }
+    public void setActive(Boolean active) { isActive = active; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public LocalDateTime getPasswordChangedAt() {
-        return passwordChangedAt;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public void setPasswordChangedAt(LocalDateTime passwordChangedAt) {
-        this.passwordChangedAt = passwordChangedAt;
-    }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 
-    public Boolean getActive() {
-        return isActive;
-    }
-
-    public void setActive(Boolean active) {
-        isActive = active;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public LocalDateTime getAccountStatus() {
-        return accountStatus;
-    }
-
-    public void setAccountStatus(LocalDateTime accountStatus) {
-        this.accountStatus = accountStatus;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
+    public Long getOrganizationId() { return organizationId; }
+    public void setOrganizationId(Long organizationId) { this.organizationId = organizationId; }
 }

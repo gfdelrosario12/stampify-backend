@@ -27,60 +27,40 @@ public class Stamp {
     private String scanStatus;
 
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    public Long getId() {
-        return id;
-    }
+    // For safe delete / orphan handling
+    private Boolean valid = true;
+    private LocalDateTime deletedAt;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    /* ===== GETTERS / SETTERS ===== */
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Passport getPassport() {
-        return passport;
-    }
+    public Passport getPassport() { return passport; }
+    public void setPassport(Passport passport) { this.passport = passport; }
 
-    public void setPassport(Passport passport) {
-        this.passport = passport;
-    }
+    public Event getEvent() { return event; }
+    public void setEvent(Event event) { this.event = event; }
 
-    public Event getEvent() {
-        return event;
-    }
+    public Scanner getScanner() { return scanner; }
+    public void setScanner(Scanner scanner) { this.scanner = scanner; }
 
-    public void setEvent(Event event) {
-        this.event = event;
-    }
+    public LocalDateTime getStampedAt() { return stampedAt; }
+    public void setStampedAt(LocalDateTime stampedAt) { this.stampedAt = stampedAt; }
 
-    public Scanner getScanner() {
-        return scanner;
-    }
+    public String getScanStatus() { return scanStatus; }
+    public void setScanStatus(String scanStatus) { this.scanStatus = scanStatus; }
 
-    public void setScanner(Scanner scanner) {
-        this.scanner = scanner;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public LocalDateTime getStampedAt() {
-        return stampedAt;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public void setStampedAt(LocalDateTime stampedAt) {
-        this.stampedAt = stampedAt;
-    }
+    public Boolean getValid() { return valid; }
+    public void setValid(Boolean valid) { this.valid = valid; }
 
-    public String getScanStatus() {
-        return scanStatus;
-    }
-
-    public void setScanStatus(String scanStatus) {
-        this.scanStatus = scanStatus;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
 }

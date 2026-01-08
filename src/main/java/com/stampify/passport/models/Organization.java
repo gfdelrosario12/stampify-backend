@@ -19,6 +19,9 @@ public class Organization {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     /* ================= ADMINS ================= */
     @OneToMany(
             mappedBy = "organization",
@@ -128,5 +131,13 @@ public class Organization {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

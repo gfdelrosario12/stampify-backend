@@ -19,64 +19,44 @@ public class Passport {
     private LocalDateTime issuedAt;
     private LocalDateTime expiresAt;
     private String passportStatus;
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @OneToMany(mappedBy = "passport")
     private List<Stamp> stamps;
 
-    public Long getId() {
-        return id;
-    }
+    /* ===== GETTERS / SETTERS ===== */
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Member getMember() { return member; }
+    public void setMember(Member member) { this.member = member; }
 
-    public Member getMember() {
-        return member;
-    }
+    public LocalDateTime getIssuedAt() { return issuedAt; }
+    public void setIssuedAt(LocalDateTime issuedAt) { this.issuedAt = issuedAt; }
 
-    public void setMember(Member member) {
-        this.member = member;
-    }
+    public LocalDateTime getExpiresAt() { return expiresAt; }
+    public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
 
-    public LocalDateTime getIssuedAt() {
-        return issuedAt;
-    }
+    public String getPassportStatus() { return passportStatus; }
+    public void setPassportStatus(String passportStatus) { this.passportStatus = passportStatus; }
 
-    public void setIssuedAt(LocalDateTime issuedAt) {
-        this.issuedAt = issuedAt;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public LocalDateTime getExpiresAt() {
-        return expiresAt;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public void setExpiresAt(LocalDateTime expiresAt) {
-        this.expiresAt = expiresAt;
-    }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
 
-    public String getPassportStatus() {
-        return passportStatus;
-    }
-
-    public void setPassportStatus(String passportStatus) {
-        this.passportStatus = passportStatus;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public List<Stamp> getStamps() {
-        return stamps;
-    }
-
-    public void setStamps(List<Stamp> stamps) {
-        this.stamps = stamps;
-    }
+    public List<Stamp> getStamps() { return stamps; }
+    public void setStamps(List<Stamp> stamps) { this.stamps = stamps; }
 }

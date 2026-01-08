@@ -6,7 +6,6 @@ import com.stampify.passport.models.*;
 public class UserMapper {
 
     /* ================= BASE ================= */
-
     private static void mapBase(User user, UserDTO dto) {
         dto.setId(user.getId());
         dto.setFirstName(user.getFirstName());
@@ -18,14 +17,17 @@ public class UserMapper {
 
         dto.setCreatedAt(user.getCreatedAt());
         dto.setUpdatedAt(user.getUpdatedAt());
-        dto.setAccountStatus(user.getAccountStatus());
 
-        // ✅ THIS IS THE FIX
+        // role is determined by subclass
         dto.setRole(resolveRole(user));
+
+        // organization id
+        if (user.getOrganization() != null) {
+            dto.setOrganizationId(user.getOrganization().getId());
+        }
     }
 
     /* ================= ROLE ================= */
-
     private static String resolveRole(User user) {
         if (user instanceof Admin) return "ADMIN";
         if (user instanceof Member) return "MEMBER";
@@ -34,45 +36,35 @@ public class UserMapper {
     }
 
     /* ================= ADMIN ================= */
-
     public static AdminDTO toAdminDTO(Admin admin) {
         AdminDTO dto = new AdminDTO();
         mapBase(admin, dto);
-        dto.setOrganizationId(admin.getOrganization().getId());
-        dto.setCreatedAt(admin.getCreatedAt());
         return dto;
     }
 
     /* ================= MEMBER ================= */
-
     public static MemberDTO toMemberDTO(Member member) {
         MemberDTO dto = new MemberDTO();
         mapBase(member, dto);
-        dto.setOrganizationId(member.getOrganization().getId());
-        dto.setJoinedAt(member.getJoinedAt());
-        dto.setLeftAt(member.getLeftAt());
-        dto.setCreatedAt(member.getCreatedAt());
-        dto.setPassportCount(
-                member.getPassports() == null ? 0 : member.getPassports().size()
-        );
+
+        // Number of passports
+        dto.setPassportCount(member.getPassports() == null ? 0 : member.getPassports().size());
+
         return dto;
     }
 
     /* ================= SCANNER ================= */
-
     public static ScannerDTO toScannerDTO(Scanner scanner) {
         ScannerDTO dto = new ScannerDTO();
         mapBase(scanner, dto);
-        dto.setDeviceIdentifier(scanner.getDeviceIdentifier());
-        dto.setRegisteredAt(scanner.getRegisteredAt());
-        dto.setStampCount(
-                scanner.getStamps() == null ? 0 : scanner.getStamps().size()
-        );
+
+        // Number of stamps
+        dto.setStampCount(scanner.getStamps() == null ? 0 : scanner.getStamps().size());
+
         return dto;
     }
 
     /* ================= POLYMORPHIC ================= */
-
     public static UserDTO toDTO(User user) {
         if (user instanceof Admin admin) return toAdminDTO(admin);
         if (user instanceof Member member) return toMemberDTO(member);

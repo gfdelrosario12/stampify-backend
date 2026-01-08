@@ -3,6 +3,7 @@ package com.stampify.passport.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.Where;
 
 @Entity
 @Table(name = "users")
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
         discriminatorType = DiscriminatorType.STRING,
         length = 20
 )
+@Where(clause = "deleted_at IS NULL") // Automatically ignores soft-deleted users
 public abstract class User {
 
     @Id
@@ -46,30 +48,38 @@ public abstract class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "account_status")
-    private LocalDateTime accountStatus;
+    @ManyToOne
+    @JoinColumn(name = "organization_id", nullable = false)
+    private Organization organization;
 
+    /* ================= SOFT DELETE ================= */
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by")
+    private String deletedBy;
+
+    /* ================= PREPERSIST / UPDATE ================= */
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = this.createdAt;
     }
 
-    @ManyToOne
-    @JoinColumn(name = "organization_id", nullable = false)
-    private Organization organization;
-
-    public Organization getOrganization() {
-        return organization;
-    }
-
-    public void setOrganization(Organization organization) {
-        this.organization = organization;
-    }
-
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    /* ================= SOFT DELETE METHODS ================= */
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
+    public void softDelete(String deletedBy) {
+        this.isActive = false;
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = deletedBy;
     }
 
     /* ================= GETTERS & SETTERS ================= */
@@ -102,18 +112,14 @@ public abstract class User {
     public void setActive(Boolean active) { isActive = active; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public Organization getOrganization() { return organization; }
+    public void setOrganization(Organization organization) { this.organization = organization; }
 
-    public LocalDateTime getAccountStatus() {
-        return accountStatus;
-    }
-
-    public void setAccountStatus(LocalDateTime accountStatus) {
-        this.accountStatus = accountStatus;
-    }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public String getDeletedBy() { return deletedBy; }
 }
