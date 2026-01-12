@@ -10,18 +10,19 @@ import java.util.List;
 public class Organization {
 
     /* ================= PRIMARY KEY ================= */
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     /* ================= BASIC INFO ================= */
-
     @Column(nullable = false, unique = true)
     private String name;
 
-    /* ================= AUDIT FIELDS ================= */
+    // NEW: domain field for automatic user assignment
+    @Column(nullable = false, unique = true)
+    private String domain;
 
+    /* ================= AUDIT FIELDS ================= */
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -32,15 +33,6 @@ public class Organization {
     private LocalDateTime deletedAt;
 
     /* ================= RELATIONSHIPS ================= */
-
-    /**
-     * IMPORTANT:
-     * - No cascade
-     * - No orphanRemoval
-     * - Organization MUST be creatable without users
-     * - Soft delete propagation handled in service layer
-     */
-
     @OneToMany(mappedBy = "organization")
     private List<Admin> admins = new ArrayList<>();
 
@@ -53,8 +45,10 @@ public class Organization {
     @OneToMany(mappedBy = "organization")
     private List<Event> events = new ArrayList<>();
 
-    /* ================= LIFECYCLE ================= */
+    @OneToMany(mappedBy = "organization", fetch = FetchType.LAZY)
+    private List<OrganizationAuditLog> auditLogs = new ArrayList<>();
 
+    /* ================= LIFECYCLE ================= */
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -67,7 +61,6 @@ public class Organization {
     }
 
     /* ================= SOFT DELETE ================= */
-
     public boolean isDeleted() {
         return this.deletedAt != null;
     }
@@ -77,67 +70,32 @@ public class Organization {
     }
 
     /* ================= GETTERS & SETTERS ================= */
+    public Long getId() { return id; }
 
-    public Long getId() {
-        return id;
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getDomain() { return domain; }
+    public void setDomain(String domain) {
+        if (domain != null) {
+            this.domain = domain.toLowerCase().trim();
+        }
     }
 
-    public String getName() {
-        return name;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
-
-    public List<Admin> getAdmins() {
-        return admins;
-    }
-
-    public List<Member> getMembers() {
-        return members;
-    }
-
-    public List<OrgScanner> getScanners() {
-        return scanners;
-    }
-
-    public List<Event> getEvents() {
-        return events;
-    }
+    public List<Admin> getAdmins() { return admins; }
+    public List<Member> getMembers() { return members; }
+    public List<OrgScanner> getScanners() { return scanners; }
+    public List<Event> getEvents() { return events; }
+    public List<OrganizationAuditLog> getAuditLogs() { return auditLogs; }
 
     /* ================= RESTRICTED SETTERS ================= */
+    public void setId(Long id) { this.id = id; }
 
-    /**
-     * Intentionally limited setters to prevent
-     * accidental state corruption.
-     */
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    protected void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    protected void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    protected void setDeletedAt(LocalDateTime deletedAt) {
-        this.deletedAt = deletedAt;
-    }
+    protected void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    protected void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    protected void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
 }

@@ -68,8 +68,10 @@ public class OrganizationService {
        UPDATE
        ============================ */
     public Organization updateOrganization(Organization org, SuperAdmin actorUser) {
+
         Organization existing = organizationRepository.findById(org.getId())
-                .orElseThrow(() -> new RuntimeException("Organization not found with ID: " + org.getId()));
+                .orElseThrow(() ->
+                        new RuntimeException("Organization not found with ID: " + org.getId()));
 
         existing.setName(org.getName());
 
@@ -95,12 +97,17 @@ public class OrganizationService {
             user.softDelete(actorUser.getEmail());
 
             if (user instanceof Member member) {
-                List<Passport> passports = passportRepository.findByMemberAndDeletedAtIsNull(member);
+
+                List<Passport> passports =
+                        passportRepository.findByMemberAndDeletedAtIsNull(member);
+
                 for (Passport passport : passports) {
                     passport.setPassportStatus("REVOKED");
                     passport.setDeletedAt(now);
 
-                    List<Stamp> stamps = stampRepository.findByPassportAndDeletedAtIsNull(passport);
+                    List<Stamp> stamps =
+                            stampRepository.findByPassportAndDeletedAtIsNull(passport);
+
                     for (Stamp stamp : stamps) {
                         stamp.setValid(false);
                         stamp.setDeletedAt(now);
@@ -109,7 +116,10 @@ public class OrganizationService {
             }
 
             if (user instanceof OrgScanner scanner) {
-                List<Stamp> stamps = stampRepository.findByScannerAndDeletedAtIsNull(scanner);
+
+                List<Stamp> stamps =
+                        stampRepository.findByScannerAndDeletedAtIsNull(scanner);
+
                 for (Stamp stamp : stamps) {
                     stamp.setValid(false);
                     stamp.setDeletedAt(now);
@@ -118,20 +128,27 @@ public class OrganizationService {
         }
 
         org.markDeleted(now);
+        organizationRepository.save(org);
+
         logAudit(actorUser, "ORGANIZATION", "DELETE", org);
     }
 
     /* ============================
        HELPER METHODS
        ============================ */
-    private void logAudit(SuperAdmin actorUser, String actionCategory, String actionName, Organization entity) {
+    private void logAudit(
+            SuperAdmin actorUser,
+            String actionCategory,
+            String actionName,
+            Organization organization) {
+
         OrganizationAuditLog auditLog = new OrganizationAuditLog();
         auditLog.setActorSuperAdminId(actorUser.getId());
         auditLog.setActionCategory(actionCategory);
         auditLog.setActionName(actionName);
         auditLog.setEntityName("Organization");
-        auditLog.setEntityId(entity.getId());
-        auditLog.setOccurredAt(LocalDateTime.now());
+        auditLog.setOrganization(organization);
+        // occurredAt handled by @PrePersist
 
         orgAuditLogRepository.save(auditLog);
     }

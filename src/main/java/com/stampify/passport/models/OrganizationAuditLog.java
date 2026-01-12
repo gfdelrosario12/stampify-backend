@@ -11,43 +11,66 @@ public class OrganizationAuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /* ================= ACTOR ================= */
+
     @Column(name = "actor_super_admin_id", nullable = false)
     private Long actorSuperAdminId;
 
-    @Column(nullable = false)
-    private String actionCategory; // e.g., ORGANIZATION
+    /* ================= ACTION ================= */
 
     @Column(nullable = false)
-    private String actionName; // e.g., CREATE, UPDATE, DELETE
+    private String actionCategory; // ORGANIZATION
 
     @Column(nullable = false)
-    private String entityName; // e.g., Organization
-
-    private Long entityId;
+    private String actionName; // CREATE, UPDATE, DELETE
 
     @Column(nullable = false)
+    private String entityName; // Organization
+
+    /* ================= RELATIONSHIP ================= */
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "organization_id", nullable = false)
+    private Organization organization;
+
+    /* ================= TIMESTAMP ================= */
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime occurredAt;
 
-    /* ===== Getters & Setters ===== */
+    @PrePersist
+    protected void onCreate() {
+        this.occurredAt = LocalDateTime.now();
+    }
+
+    /* ================= GETTERS & SETTERS ================= */
 
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
 
     public Long getActorSuperAdminId() { return actorSuperAdminId; }
-    public void setActorSuperAdminId(Long actorSuperAdminId) { this.actorSuperAdminId = actorSuperAdminId; }
+    public void setActorSuperAdminId(Long actorSuperAdminId) {
+        this.actorSuperAdminId = actorSuperAdminId;
+    }
 
     public String getActionCategory() { return actionCategory; }
-    public void setActionCategory(String actionCategory) { this.actionCategory = actionCategory; }
+    public void setActionCategory(String actionCategory) {
+        this.actionCategory = actionCategory;
+    }
 
     public String getActionName() { return actionName; }
-    public void setActionName(String actionName) { this.actionName = actionName; }
+    public void setActionName(String actionName) {
+        this.actionName = actionName;
+    }
 
     public String getEntityName() { return entityName; }
-    public void setEntityName(String entityName) { this.entityName = entityName; }
+    public void setEntityName(String entityName) {
+        this.entityName = entityName;
+    }
 
-    public Long getEntityId() { return entityId; }
-    public void setEntityId(Long entityId) { this.entityId = entityId; }
+    public Organization getOrganization() { return organization; }
+    public void setOrganization(Organization organization) {
+        this.organization = organization;
+    }
 
     public LocalDateTime getOccurredAt() { return occurredAt; }
-    public void setOccurredAt(LocalDateTime occurredAt) { this.occurredAt = occurredAt; }
 }

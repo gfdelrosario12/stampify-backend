@@ -45,7 +45,8 @@ public class UserService {
             throw new IllegalArgumentException("Email already exists.");
         }
 
-        Organization organization = getOrganization(req.getOrganizationId());
+        // Get organization automatically from email domain
+        Organization organization = getOrCreateOrganizationFromEmail(req.getEmail());
 
         User newUser = switch (req.getRole().toUpperCase()) {
 
@@ -73,6 +74,21 @@ public class UserService {
         logAudit(actorUser, organization, "USER", "CREATE", newUser, null, newUser);
 
         return newUser;
+    }
+
+    /**
+     * Extracts domain from email and retrieves or creates Organization
+     */
+    private Organization getOrCreateOrganizationFromEmail(String email) {
+        String domain = email.substring(email.indexOf("@") + 1).toLowerCase().trim();
+
+        return organizationRepository.findByDomain(domain)
+                .orElseGet(() -> {
+                    Organization org = new Organization();
+                    org.setName(domain.split("\\.")[0]); // e.g., "stampify"
+                    org.setDomain(domain);                // e.g., "stampify.com"
+                    return organizationRepository.save(org);
+                });
     }
 
     private void mapCommonFields(User user, RegisterUserRequest req, Organization organization) {
