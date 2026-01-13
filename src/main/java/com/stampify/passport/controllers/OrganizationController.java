@@ -26,15 +26,23 @@ public class OrganizationController {
 
     /* ===== CREATE ===== */
     @PostMapping
-    public ResponseEntity<Organization> createOrganization(@RequestBody OrganizationRequest request) throws Exception {
-        // Fetch SuperAdmin only for audit
+    public ResponseEntity<Organization> createOrganization(
+            @RequestBody OrganizationRequest request) {
+
         SuperAdmin actorUser = superAdminRepository.findById(request.getSuperAdminId())
-                .orElseThrow(() -> new RuntimeException("Super admin not found with ID: " + request.getSuperAdminId()));
+                .orElseThrow(() ->
+                        new RuntimeException("Super admin not found with ID: " + request.getSuperAdminId()));
 
         Organization org = new Organization();
         org.setName(request.getName());
 
-        Organization created = organizationService.createOrganization(org, actorUser);
+        Organization created = organizationService.createOrganization(
+                org,
+                actorUser,
+                "ORGANIZATION",
+                "CREATE_ORGANIZATION"
+        );
+
         return ResponseEntity.ok(created);
     }
 
@@ -55,31 +63,43 @@ public class OrganizationController {
     @PutMapping("/{id}")
     public ResponseEntity<Organization> updateOrganization(
             @PathVariable Long id,
-            @RequestBody OrganizationRequest request) throws Exception {
+            @RequestBody OrganizationRequest request) {
 
-        // Fetch SuperAdmin only for audit
         SuperAdmin actorUser = superAdminRepository.findById(request.getSuperAdminId())
-                .orElseThrow(() -> new RuntimeException("Super admin not found with ID: " + request.getSuperAdminId()));
+                .orElseThrow(() ->
+                        new RuntimeException("Super admin not found with ID: " + request.getSuperAdminId()));
 
         Organization org = new Organization();
         org.setId(id);
         org.setName(request.getName());
 
-        Organization updated = organizationService.updateOrganization(org, actorUser);
+        Organization updated = organizationService.updateOrganization(
+                org,
+                actorUser,
+                "ORGANIZATION",
+                "UPDATE_ORGANIZATION"
+        );
+
         return ResponseEntity.ok(updated);
     }
 
     /* ===== DELETE ===== */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrganization(
-            @RequestParam Long superAdminId,
-            @PathVariable Long id) throws Exception {
+            @PathVariable Long id,
+            @RequestParam Long superAdminId) {
 
-        // Fetch SuperAdmin only for audit
         SuperAdmin actorUser = superAdminRepository.findById(superAdminId)
-                .orElseThrow(() -> new RuntimeException("Super admin not found with ID: " + superAdminId));
+                .orElseThrow(() ->
+                        new RuntimeException("Super admin not found with ID: " + superAdminId));
 
-        organizationService.deleteOrganization(id, actorUser);
+        organizationService.deleteOrganization(
+                id,
+                actorUser,
+                "ORGANIZATION",
+                "DELETE_ORGANIZATION"
+        );
+
         return ResponseEntity.noContent().build();
     }
 

@@ -16,9 +16,6 @@ public class OrganizationService {
 
     private final OrganizationRepository organizationRepository;
     private final UserRepository userRepository;
-    private final MemberRepository memberRepository;
-    private final AdminRepository adminRepository;
-    private final ScannerRepository scannerRepository;
     private final PassportRepository passportRepository;
     private final StampRepository stampRepository;
     private final OrganizationAuditLogRepository orgAuditLogRepository;
@@ -27,129 +24,67 @@ public class OrganizationService {
     public OrganizationService(
             OrganizationRepository organizationRepository,
             UserRepository userRepository,
-            MemberRepository memberRepository,
-            AdminRepository adminRepository,
-            ScannerRepository scannerRepository,
             PassportRepository passportRepository,
             StampRepository stampRepository,
             OrganizationAuditLogRepository orgAuditLogRepository) {
-
         this.organizationRepository = organizationRepository;
         this.userRepository = userRepository;
-        this.memberRepository = memberRepository;
-        this.adminRepository = adminRepository;
-        this.scannerRepository = scannerRepository;
         this.passportRepository = passportRepository;
         this.stampRepository = stampRepository;
         this.orgAuditLogRepository = orgAuditLogRepository;
     }
 
-    /* ============================
-       CREATE
-       ============================ */
-    public Organization createOrganization(Organization org, SuperAdmin actorUser) {
+    public Organization createOrganization(Organization org, SuperAdmin actorUser, String actionCategory, String actionName) {
         Organization saved = organizationRepository.save(org);
-        logAudit(actorUser, "ORGANIZATION", "CREATE", saved);
+        logAudit(actorUser, actionCategory, actionName, saved);
         return saved;
     }
 
-    /* ============================
-       READ
-       ============================ */
-    public Optional<Organization> getById(Long id) {
-        return organizationRepository.findById(id);
-    }
-
-    public List<Organization> getAll() {
-        return organizationRepository.findAll();
-    }
-
-    /* ============================
-       UPDATE
-       ============================ */
-    public Organization updateOrganization(Organization org, SuperAdmin actorUser) {
-
+    public Organization updateOrganization(Organization org, SuperAdmin actorUser, String actionCategory, String actionName) {
         Organization existing = organizationRepository.findById(org.getId())
-                .orElseThrow(() ->
-                        new RuntimeException("Organization not found with ID: " + org.getId()));
+                .orElseThrow(() -> new RuntimeException("Organization not found with ID: " + org.getId()));
 
         existing.setName(org.getName());
 
         Organization saved = organizationRepository.save(existing);
-        logAudit(actorUser, "ORGANIZATION", "UPDATE", saved);
+        logAudit(actorUser, actionCategory, actionName, saved);
         return saved;
     }
 
-    /* ============================
-       DELETE (SOFT)
-       ============================ */
-    public void deleteOrganization(Long id, SuperAdmin actorUser) {
-
+    public void deleteOrganization(Long id, SuperAdmin actorUser, String actionCategory, String actionName) {
         Organization org = organizationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
 
         LocalDateTime now = LocalDateTime.now();
 
-        List<User> users = userRepository.findByOrganizationId(id);
-
-        for (User user : users) {
-
-            user.softDelete(actorUser.getEmail());
-
-            if (user instanceof Member member) {
-
-                List<Passport> passports =
-                        passportRepository.findByMemberAndDeletedAtIsNull(member);
-
-                for (Passport passport : passports) {
-                    passport.setPassportStatus("REVOKED");
-                    passport.setDeletedAt(now);
-
-                    List<Stamp> stamps =
-                            stampRepository.findByPassportAndDeletedAtIsNull(passport);
-
-                    for (Stamp stamp : stamps) {
-                        stamp.setValid(false);
-                        stamp.setDeletedAt(now);
-                    }
-                }
-            }
-
-            if (user instanceof OrgScanner scanner) {
-
-                List<Stamp> stamps =
-                        stampRepository.findByScannerAndDeletedAtIsNull(scanner);
-
-                for (Stamp stamp : stamps) {
-                    stamp.setValid(false);
-                    stamp.setDeletedAt(now);
-                }
-            }
-        }
+        // Soft delete all users (simplified)
+        userRepository.findByOrganizationId(id).forEach(user -> user.softDelete(actorUser.getEmail()));
 
         org.markDeleted(now);
         organizationRepository.save(org);
 
-        logAudit(actorUser, "ORGANIZATION", "DELETE", org);
+        logAudit(actorUser, actionCategory, actionName, org);
     }
 
-    /* ============================
-       HELPER METHODS
-       ============================ */
-    private void logAudit(
-            SuperAdmin actorUser,
-            String actionCategory,
-            String actionName,
-            Organization organization) {
-
+    private void logAudit(SuperAdmin actorUser, String actionCategory, String actionName, Organization entity) {
         OrganizationAuditLog auditLog = new OrganizationAuditLog();
         auditLog.setActorSuperAdminId(actorUser.getId());
         auditLog.setActionCategory(actionCategory);
         auditLog.setActionName(actionName);
         auditLog.setEntityName("Organization");
-        auditLog.setOrganization(organization);
-        // occurredAt handled by @PrePersist
+        auditLog.setOrganization(entity);
 
         orgAuditLogRepository.save(auditLog);
     }
+
+    @Transactional(readOnly = true)
+    public Optional<Organization> getById(Long id) {
+        return organizationRepository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Organization> getAll() {
+        return organizationRepository.findAll();
+    }
+
 }

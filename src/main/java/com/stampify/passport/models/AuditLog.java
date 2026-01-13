@@ -32,10 +32,11 @@ public class AuditLog {
     private String requestMethod;
     private String requestPath;
 
-    @Column(columnDefinition = "json")
+    // Use text instead of json
+    @Column(columnDefinition = "text")
     private String previousData;
 
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "text")
     private String newData;
 
     private String ipAddress;
@@ -44,115 +45,47 @@ public class AuditLog {
     @Column(nullable = false)
     private LocalDateTime occurredAt;
 
-    public Long getId() {
-        return id;
-    }
+    // ---------- Getters & Setters ----------
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public User getActorUser() {
-        return actorUser;
-    }
+    public User getActorUser() { return actorUser; }
+    public void setActorUser(User actorUser) { this.actorUser = actorUser; }
 
-    public void setActorUser(User actorUser) {
-        this.actorUser = actorUser;
-    }
+    public Organization getOrganization() { return organization; }
+    public void setOrganization(Organization organization) { this.organization = organization; }
 
-    public Organization getOrganization() {
-        return organization;
-    }
+    public String getActionCategory() { return actionCategory; }
+    public void setActionCategory(String actionCategory) { this.actionCategory = actionCategory; }
 
-    public void setOrganization(Organization organization) {
-        this.organization = organization;
-    }
+    public String getActionName() { return actionName; }
+    public void setActionName(String actionName) { this.actionName = actionName; }
 
-    public String getActionCategory() {
-        return actionCategory;
-    }
+    public String getEntityName() { return entityName; }
+    public void setEntityName(String entityName) { this.entityName = entityName; }
 
-    public void setActionCategory(String actionCategory) {
-        this.actionCategory = actionCategory;
-    }
+    public Long getEntityId() { return entityId; }
+    public void setEntityId(Long entityId) { this.entityId = entityId; }
 
-    public String getActionName() {
-        return actionName;
-    }
+    public String getRequestMethod() { return requestMethod; }
+    public void setRequestMethod(String requestMethod) { this.requestMethod = requestMethod; }
 
-    public void setActionName(String actionName) {
-        this.actionName = actionName;
-    }
+    public String getRequestPath() { return requestPath; }
+    public void setRequestPath(String requestPath) { this.requestPath = requestPath; }
 
-    public String getEntityName() {
-        return entityName;
-    }
+    public String getPreviousData() { return previousData; }
+    public void setPreviousData(String previousData) { this.previousData = previousData; }
 
-    public void setEntityName(String entityName) {
-        this.entityName = entityName;
-    }
+    public String getNewData() { return newData; }
+    public void setNewData(String newData) { this.newData = newData; }
 
-    public Long getEntityId() {
-        return entityId;
-    }
+    public String getIpAddress() { return ipAddress; }
+    public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
 
-    public void setEntityId(Long entityId) {
-        this.entityId = entityId;
-    }
+    public String getUserAgent() { return userAgent; }
+    public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
 
-    public String getRequestMethod() {
-        return requestMethod;
-    }
-
-    public void setRequestMethod(String requestMethod) {
-        this.requestMethod = requestMethod;
-    }
-
-    public String getRequestPath() {
-        return requestPath;
-    }
-
-    public void setRequestPath(String requestPath) {
-        this.requestPath = requestPath;
-    }
-
-    public String getPreviousData() {
-        return previousData;
-    }
-
-    public void setPreviousData(String previousData) {
-        this.previousData = previousData;
-    }
-
-    public String getNewData() {
-        return newData;
-    }
-
-    public void setNewData(String newData) {
-        this.newData = newData;
-    }
-
-    public String getIpAddress() {
-        return ipAddress;
-    }
-
-    public void setIpAddress(String ipAddress) {
-        this.ipAddress = ipAddress;
-    }
-
-    public String getUserAgent() {
-        return userAgent;
-    }
-
-    public void setUserAgent(String userAgent) {
-        this.userAgent = userAgent;
-    }
-
-    public LocalDateTime getOccurredAt() {
-        return occurredAt;
-    }
-
-    public void setOccurredAt(LocalDateTime occurredAt) {
-        this.occurredAt = occurredAt;
-    }
+    public LocalDateTime getOccurredAt() { return occurredAt; }
+    public void setOccurredAt(LocalDateTime occurredAt) { this.occurredAt = occurredAt; }
 }

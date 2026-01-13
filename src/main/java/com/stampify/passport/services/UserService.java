@@ -45,7 +45,7 @@ public class UserService {
             throw new IllegalArgumentException("Email already exists.");
         }
 
-        // Get organization automatically from email domain
+        // ✅ Organization resolved from EMAIL (always)
         Organization organization = getOrCreateOrganizationFromEmail(req.getEmail());
 
         User newUser = switch (req.getRole().toUpperCase()) {
@@ -71,7 +71,16 @@ public class UserService {
             default -> throw new IllegalArgumentException("Invalid role");
         };
 
-        logAudit(actorUser, organization, "USER", "CREATE", newUser, null, newUser);
+        // ✅ Audit safely (supports public registration)
+        logAudit(
+                actorUser,
+                organization,
+                "USER",
+                "CREATE",
+                newUser,
+                null,
+                newUser
+        );
 
         return newUser;
     }
