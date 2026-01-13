@@ -55,6 +55,13 @@ public class EventService {
     }
 
     /**
+     * GET ALL EVENTS
+     */
+    public List<Event> getAllEvents() {
+        return eventRepository.findAll();
+    }
+
+    /**
      * UPDATE EVENT
      */
     public Event updateEvent(Event updatedEvent) {

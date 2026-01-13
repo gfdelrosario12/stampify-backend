@@ -30,6 +30,13 @@ public class PassportService {
     }
 
     /* ======================================================
+       LIST / QUERY PASSPORTS
+       ====================================================== */
+    public List<Passport> getAllPassports() {
+        return passportRepository.findAll();
+    }
+
+    /* ======================================================
        GET PASSPORT
        ====================================================== */
     public Optional<Passport> getById(Long id) {
