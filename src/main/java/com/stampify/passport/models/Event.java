@@ -23,15 +23,30 @@ public class Event {
     private String eventDescription;
 
     private String eventType;
+
     private String eventBadge;
+
     private String venueName;
+
     private String venueImageUrl;
+
     private LocalDateTime scheduledAt;
+
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
+
+    /**
+     * For soft delete
+     */
+    private LocalDateTime deletedAt;
 
     @OneToMany(mappedBy = "event")
     private List<Stamp> stamps;
+
+    // -------------------------
+    // Getters and Setters
+    // -------------------------
 
     public Long getId() {
         return id;
@@ -119,6 +134,14 @@ public class Event {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 
     public List<Stamp> getStamps() {

@@ -12,12 +12,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("api/admins") // changed from "api/admins" to "/admins" to match frontend routes
+@RequestMapping("api/admins")
 public class AdminController {
 
     @Autowired private UserService userService;
     @Autowired private OrganizationService organizationService;
-    @Autowired private EventService eventService;
     @Autowired private PassportService passportService;
     @Autowired private StampService stampService;
     @Autowired private AuditService auditService;
@@ -40,12 +39,6 @@ public class AdminController {
         return ResponseEntity.ok(created);
     }
 
-    /**
-     * Return users in the shape the frontend expects for initial listing:
-     * - role in UPPERCASE (e.g. "MEMBER")
-     * - organizationId (Long) instead of nested organization
-     * Accepts optional ?organizationId= to filter by organization.
-     */
     @GetMapping("/users")
     public ResponseEntity<List<AuthUserResponse>> getAllUsers(@RequestParam(required = false) Long organizationId) {
         List<User> all = userService.getAllUsers();
@@ -165,39 +158,6 @@ public class AdminController {
     }
 
     /* ==========================
-       EVENT MANAGEMENT
-       ========================== */
-
-    @PostMapping("/events")
-    public ResponseEntity<Event> createEvent(@RequestBody Event event) {
-        Event created = eventService.createEvent(event);
-        return ResponseEntity.ok(created);
-    }
-
-    @GetMapping("/events")
-    public ResponseEntity<List<Event>> getAllEvents() {
-        return ResponseEntity.ok(eventService.getAllEvents());
-    }
-
-    @GetMapping("/events/{id}")
-    public ResponseEntity<Event> getEvent(@PathVariable Long id) {
-        return eventService.getById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
-    }
-
-    @PutMapping("/events/{id}")
-    public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event event) {
-        event.setId(id);
-        Event updated = eventService.updateEvent(event);
-        return ResponseEntity.ok(updated);
-    }
-
-    @DeleteMapping("/events/{id}")
-    public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
-        eventService.deleteEvent(id);
-        return ResponseEntity.ok().build();
-    }
-
-    /* ==========================
        PASSPORT & STAMP MANAGEMENT
        ========================== */
 
@@ -249,13 +209,12 @@ public class AdminController {
        Helper DTOs
        ========================== */
 
-    // Lightweight response shape that matches the frontend's AuthUser type for listing
     public static class AuthUserResponse {
         public Long id;
         public String firstName;
         public String lastName;
         public String email;
-        public String role; // UPPERCASE: MEMBER | SCANNER | ADMIN
+        public String role;
         public Long organizationId;
         public Boolean isActive = true;
         public Object createdAt;
@@ -267,10 +226,8 @@ public class AdminController {
             r.firstName = u.getFirstName();
             r.lastName = u.getLastName();
             r.email = u.getEmail();
-            // Derive role from concrete class name (avoids requiring getRole() on User)
             r.role = (u != null && u.getClass() != null) ? u.getClass().getSimpleName().toUpperCase() : null;
             r.organizationId = (u.getOrganization() != null) ? u.getOrganization().getId() : null;
-            // preserve timestamps if available on model
             try { r.createdAt = u.getCreatedAt(); } catch (Exception ignored) {}
             try { r.updatedAt = u.getUpdatedAt(); } catch (Exception ignored) {}
             return r;
@@ -278,4 +235,3 @@ public class AdminController {
     }
 
 }
-
