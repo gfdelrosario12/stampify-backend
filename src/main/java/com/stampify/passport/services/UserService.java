@@ -2,6 +2,8 @@ package com.stampify.passport.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stampify.passport.dto.RegisterUserRequest;
+import com.stampify.passport.dto.UserDTO;
+import com.stampify.passport.mappers.UserMapper;
 import com.stampify.passport.models.*;
 import com.stampify.passport.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,13 +41,12 @@ public class UserService {
     /* ======================================================
        CREATE USER
        ====================================================== */
-    public User createUser(RegisterUserRequest req, User actorUser) throws Exception {
+    public User createUser(RegisterUserRequest req, User actorUser) {
 
         if (userRepository.findByEmail(req.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Email already exists.");
         }
 
-        // ✅ Organization resolved from EMAIL (always)
         Organization organization = getOrCreateOrganizationFromEmail(req.getEmail());
 
         User newUser = switch (req.getRole().toUpperCase()) {
@@ -71,7 +72,8 @@ public class UserService {
             default -> throw new IllegalArgumentException("Invalid role");
         };
 
-        // ✅ Audit safely (supports public registration)
+        UserDTO dto = UserMapper.toDTO(newUser);
+
         logAudit(
                 actorUser,
                 organization,
@@ -79,40 +81,10 @@ public class UserService {
                 "CREATE",
                 newUser,
                 null,
-                newUser
+                serialize(dto)
         );
 
         return newUser;
-    }
-
-    /**
-     * Extracts domain from email and retrieves or creates Organization
-     */
-    private Organization getOrCreateOrganizationFromEmail(String email) {
-        String domain = email.substring(email.indexOf("@") + 1).toLowerCase().trim();
-
-        return organizationRepository.findByDomain(domain)
-                .orElseGet(() -> {
-                    Organization org = new Organization();
-                    org.setName(domain.split("\\.")[0]); // e.g., "stampify"
-                    org.setDomain(domain);                // e.g., "stampify.com"
-                    return organizationRepository.save(org);
-                });
-    }
-
-    private void mapCommonFields(User user, RegisterUserRequest req, Organization organization) {
-        user.setFirstName(req.getFirstName());
-        user.setLastName(req.getLastName());
-        user.setEmail(req.getEmail().toLowerCase().trim());
-        user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
-        user.setOrganization(organization);
-        user.setActive(true);
-        user.setUpdatedAt(LocalDateTime.now());
-    }
-
-    private Organization getOrganization(Long orgId) {
-        return organizationRepository.findById(orgId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid organization"));
     }
 
     /* ======================================================
@@ -133,22 +105,35 @@ public class UserService {
     /* ======================================================
        LOGIN
        ====================================================== */
-    public Optional<User> login(String email, String password, String ipAddress, String userAgent) throws Exception {
+    public Optional<User> login(String email, String password, String ipAddress, String userAgent) {
+
         Optional<User> userOpt = userRepository.findByEmail(email.toLowerCase().trim())
                 .filter(User::getActive)
                 .filter(u -> passwordEncoder.matches(password, u.getPasswordHash()));
 
         User actorUser = userOpt.orElse(null);
 
-        // Audit login
-        AuditLog auditLog = createAuditLog(actorUser, null, "USER", "LOGIN", null, null);
-        AuditLoginEvent loginEvent = new AuditLoginEvent();
-        loginEvent.setAuditLog(auditLog);
-        loginEvent.setUser(actorUser);
-        loginEvent.setOccurredAt(LocalDateTime.now());
-        loginEvent.setSuccessful(userOpt.isPresent());
-        if (!userOpt.isPresent()) loginEvent.setFailureReason("Invalid credentials");
-        auditLoginEventRepository.save(loginEvent);
+        AuditLog auditLog = createAuditLog(
+                actorUser,
+                null,
+                "USER",
+                "LOGIN",
+                null,
+                null,
+                null
+        );
+
+        AuditLoginEvent event = new AuditLoginEvent();
+        event.setAuditLog(auditLog);
+        event.setUser(actorUser);
+        event.setOccurredAt(LocalDateTime.now());
+        event.setSuccessful(userOpt.isPresent());
+
+        if (userOpt.isEmpty()) {
+            event.setFailureReason("Invalid credentials");
+        }
+
+        auditLoginEventRepository.save(event);
 
         return userOpt;
     }
@@ -156,14 +141,15 @@ public class UserService {
     /* ======================================================
        UPDATE USER
        ====================================================== */
-    public Optional<User> editUser(Long id, User incoming, User actorUser) throws Exception {
+    public Optional<User> editUser(Long id, User incoming, User actorUser) {
+
         return userRepository.findById(id).map(existing -> {
 
             if (!existing.getClass().equals(incoming.getClass())) {
                 throw new IllegalStateException("Role change is not allowed");
             }
 
-            String previousData = serialize(existing);
+            UserDTO before = UserMapper.toDTO(existing);
 
             existing.setFirstName(incoming.getFirstName());
             existing.setLastName(incoming.getLastName());
@@ -174,11 +160,17 @@ public class UserService {
 
             User saved = userRepository.save(existing);
 
-            try {
-                logAudit(actorUser, existing.getOrganization(), "USER", "UPDATE", saved, previousData, saved);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            UserDTO after = UserMapper.toDTO(saved);
+
+            logAudit(
+                    actorUser,
+                    saved.getOrganization(),
+                    "USER",
+                    "UPDATE",
+                    saved,
+                    serialize(before),
+                    serialize(after)
+            );
 
             return saved;
         });
@@ -187,45 +179,64 @@ public class UserService {
     /* ======================================================
        DELETE USER
        ====================================================== */
-    public void deleteUser(Long id, User actorUser) throws Exception {
+    public void deleteUser(Long id, User actorUser) {
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        user.softDelete(actorUser != null ? actorUser.getEmail() : "SYSTEM");
+        UserDTO before = UserMapper.toDTO(user);
 
+        user.softDelete(actorUser != null ? actorUser.getEmail() : "SYSTEM");
         userRepository.save(user);
 
-        logAudit(actorUser, user.getOrganization(), "USER", "DELETE", user, serialize(user), null);
+        logAudit(
+                actorUser,
+                user.getOrganization(),
+                "USER",
+                "DELETE",
+                user,
+                serialize(before),
+                null
+        );
     }
 
     /* ======================================================
        PASSWORD CHANGE
        ====================================================== */
-    public Optional<User> changePassword(String email, String oldPass, String newPass, User actorUser) throws Exception {
+    public Optional<User> changePassword(String email, String oldPass, String newPass, User actorUser) {
+
         return userRepository.findByEmail(email.toLowerCase().trim())
                 .filter(User::getActive)
                 .map(user -> {
+
                     if (!passwordEncoder.matches(oldPass, user.getPasswordHash())) {
                         throw new IllegalArgumentException("Invalid password");
                     }
 
-                    String previousData = serialize(user);
+                    UserDTO before = UserMapper.toDTO(user);
 
                     user.setPasswordHash(passwordEncoder.encode(newPass));
                     user.setUpdatedAt(LocalDateTime.now());
                     User saved = userRepository.save(user);
 
-                    AuditLog auditLog = null;
-                    try {
-                        auditLog = createAuditLog(actorUser, user.getOrganization(), "USER", "PASSWORD_CHANGE", null, previousData);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
+                    UserDTO after = UserMapper.toDTO(saved);
+
+                    AuditLog auditLog = createAuditLog(
+                            actorUser,
+                            user.getOrganization(),
+                            "USER",
+                            "PASSWORD_CHANGE",
+                            saved,
+                            serialize(before),
+                            serialize(after)
+                    );
+
                     AuditPasswordChange pwChange = new AuditPasswordChange();
                     pwChange.setAuditLog(auditLog);
                     pwChange.setUser(saved);
                     pwChange.setChangedBy(actorUser);
                     pwChange.setChangedAt(LocalDateTime.now());
+
                     auditPasswordChangeRepository.save(pwChange);
 
                     return saved;
@@ -233,7 +244,7 @@ public class UserService {
     }
 
     /* ======================================================
-       OTP FLOW
+       OTP
        ====================================================== */
     public String generateAndSendOtp(String email) {
         String otp = otpService.generateOtp(email);
@@ -241,60 +252,77 @@ public class UserService {
         return otp;
     }
 
-    private void sendOtpEmail(String email, String otp) {
-        try {
-            JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-            mailSender.setHost("smtp.example.com");
-            mailSender.setPort(587);
-            mailSender.setUsername("your_email@example.com");
-            mailSender.setPassword("password");
-
-            Properties props = mailSender.getJavaMailProperties();
-            props.put("mail.smtp.auth", "true");
-            props.put("mail.smtp.starttls.enable", "true");
-
-            SimpleMailMessage msg = new SimpleMailMessage();
-            msg.setTo(email);
-            msg.setSubject("Your OTP Code");
-            msg.setText("Your OTP is: " + otp);
-
-            mailSender.send(msg);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to send OTP email", e);
-        }
-    }
-
     /* ======================================================
-       HELPER METHODS
+       INTERNAL HELPERS
        ====================================================== */
-    private void logAudit(User actorUser, Organization org, String entityName, String actionName,
-                          Object newEntity, String previousData, Object newData) throws Exception {
+    private Organization getOrCreateOrganizationFromEmail(String email) {
+        String domain = email.substring(email.indexOf("@") + 1).toLowerCase().trim();
 
-        AuditLog auditLog = new AuditLog();
-        auditLog.setActorUser(actorUser);
-        auditLog.setOrganization(org);
-        auditLog.setActionCategory(entityName);
-        auditLog.setActionName(actionName);
-        if (newEntity instanceof User u) auditLog.setEntityId(u.getId());
-        auditLog.setEntityName(entityName);
-        auditLog.setPreviousData(previousData);
-        auditLog.setNewData(newData != null ? serialize(newData) : null);
-        auditLog.setOccurredAt(LocalDateTime.now());
-
-        auditLogRepository.save(auditLog);
+        return organizationRepository.findByDomain(domain)
+                .orElseGet(() -> {
+                    Organization org = new Organization();
+                    org.setName(domain.split("\\.")[0]);
+                    org.setDomain(domain);
+                    return organizationRepository.save(org);
+                });
     }
 
-    private AuditLog createAuditLog(User actorUser, Organization org, String entityName, String actionName,
-                                    Object newEntity, String previousData) throws Exception {
+    private Organization getOrganization(Long orgId) {
+        return organizationRepository.findById(orgId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid organization"));
+    }
+
+    private void mapCommonFields(User user, RegisterUserRequest req, Organization org) {
+        user.setFirstName(req.getFirstName());
+        user.setLastName(req.getLastName());
+        user.setEmail(req.getEmail());
+        user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
+        user.setOrganization(org);
+        user.setActive(true);
+        user.setUpdatedAt(LocalDateTime.now());
+    }
+
+    private void logAudit(
+            User actorUser,
+            Organization org,
+            String entity,
+            String action,
+            Object refEntity,
+            String previousData,
+            String newData
+    ) {
         AuditLog log = new AuditLog();
         log.setActorUser(actorUser);
         log.setOrganization(org);
-        log.setActionCategory(entityName);
-        log.setActionName(actionName);
-        log.setEntityId(newEntity instanceof User u ? u.getId() : null);
-        log.setEntityName(entityName);
+        log.setActionCategory(entity);
+        log.setActionName(action);
+        log.setEntityId(refEntity instanceof User u ? u.getId() : null);
+        log.setEntityName(entity);
         log.setPreviousData(previousData);
-        log.setNewData(newEntity != null ? serialize(newEntity) : null);
+        log.setNewData(newData);
+        log.setOccurredAt(LocalDateTime.now());
+
+        auditLogRepository.save(log);
+    }
+
+    private AuditLog createAuditLog(
+            User actorUser,
+            Organization org,
+            String entity,
+            String action,
+            Object refEntity,
+            String previousData,
+            String newData
+    ) {
+        AuditLog log = new AuditLog();
+        log.setActorUser(actorUser);
+        log.setOrganization(org);
+        log.setActionCategory(entity);
+        log.setActionName(action);
+        log.setEntityId(refEntity instanceof User u ? u.getId() : null);
+        log.setEntityName(entity);
+        log.setPreviousData(previousData);
+        log.setNewData(newData);
         log.setOccurredAt(LocalDateTime.now());
         return auditLogRepository.save(log);
     }
@@ -304,6 +332,29 @@ public class UserService {
             return objectMapper.writeValueAsString(obj);
         } catch (Exception e) {
             return "{}";
+        }
+    }
+
+    private void sendOtpEmail(String email, String otp) {
+        try {
+            JavaMailSenderImpl sender = new JavaMailSenderImpl();
+            sender.setHost("smtp.example.com");
+            sender.setPort(587);
+            sender.setUsername("your_email@example.com");
+            sender.setPassword("password");
+
+            Properties props = sender.getJavaMailProperties();
+            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.starttls.enable", "true");
+
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setTo(email);
+            msg.setSubject("Your OTP Code");
+            msg.setText("Your OTP is: " + otp);
+
+            sender.send(msg);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send OTP email", e);
         }
     }
 }
